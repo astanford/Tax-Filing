@@ -1,0 +1,27 @@
+# IMPORTANT: Protects against committing personal tax data.
+# DO NOT remove the my-tax-docs/ or analysis/ entries.
+
+# Personal tax documents (NEVER commit)
+my-tax-docs/
+my tax files/
+
+# Generated analysis (contains personal financial data)
+analysis/
+
+# Raw reference PDFs (large, freely available from IRS.gov)
+reference/Raw/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp

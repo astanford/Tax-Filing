@@ -1,0 +1,17 @@
+document,box_or_line,description,value,source_path
+W-2 (Jane Doe - Acme Corp),Box 1,"Wages, tips, other compensation",50000.00,docs/jane-w2-acme-2025.pdf
+W-2 (Jane Doe - Acme Corp),Box 2,Federal income tax withheld,8000.00,docs/jane-w2-acme-2025.pdf
+W-2 (Jane Doe - Acme Corp),Box 3,Social security wages,50000.00,docs/jane-w2-acme-2025.pdf
+W-2 (Jane Doe - Acme Corp),Box 4,Social security tax withheld,3100.00,docs/jane-w2-acme-2025.pdf
+W-2 (Jane Doe - Acme Corp),Box 5,Medicare wages and tips,50000.00,docs/jane-w2-acme-2025.pdf
+W-2 (Jane Doe - Acme Corp),Box 6,Medicare tax withheld,725.00,docs/jane-w2-acme-2025.pdf
+W-2 (Jane Doe - Acme Corp),Box 16,State wages,50000.00,docs/jane-w2-acme-2025.pdf
+W-2 (Jane Doe - Acme Corp),Box 17,State income tax,2500.00,docs/jane-w2-acme-2025.pdf
+1099-INT (First National Bank),Box 1,Interest income,150.00,docs/1099-int-fnb-2025.pdf
+1099-DIV (Sample Investments),Box 1a,Total ordinary dividends,500.00,docs/1099-div-sample-2025.pdf
+1099-DIV (Sample Investments),Box 1b,Qualified dividends,400.00,docs/1099-div-sample-2025.pdf
+1099-DIV (Sample Investments),Box 2a,Total capital gain distributions,200.00,docs/1099-div-sample-2025.pdf
+1098 (Best Mortgage Co),Box 1,Mortgage interest received,12000.00,docs/1098-mortgage-2025.pdf
+1098 (Best Mortgage Co),Box 2,Outstanding mortgage principal,250000.00,docs/1098-mortgage-2025.pdf
+1098 (Best Mortgage Co),Box 4,"Real estate taxes paid",4500.00,docs/1098-mortgage-2025.pdf
+1098-E (Student Loan Servicer),Box 1,Student loan interest paid,1200.00,docs/1098-e-loan-2025.pdf
