@@ -184,6 +184,10 @@ See the [examples/](examples/) directory for sample outputs using fictional data
 - **Demo mode** — Run the full pipeline end-to-end with fictional data
 - **GitHub Actions CI** — Verify scripts stay functional on every push
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) if you'd like to add a skill, fix a bug, or curate a new reference file.
+
 ## Disclaimer
 
 These skills assist with tax return preparation. They do not constitute tax advice. Verify all numbers against source documents and IRS publications. Consult a qualified tax professional for your specific situation.
