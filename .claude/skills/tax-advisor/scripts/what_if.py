@@ -2,14 +2,14 @@
 what_if.py — Tax planning what-if scenario engine.
 
 Models hypothetical changes to a filed return and computes the dollar impact
-on federal, Maryland state, and local taxes.
+on federal and Georgia state taxes.
 
 Usage:
     python what_if.py '{"baseline": {"filing_status": "MFJ", "wages_primary": 162025, ...}, "scenario": {"name": "max_401k_both", "retirement_contributions_primary": 23500, "retirement_contributions_spouse": 23500}}'
 
 Constants sourced from:
   - reference/curated/2025-tax-numbers.md (federal brackets, standard deduction, SALT cap, AMT, Medicare)
-  - reference/curated/maryland-502-guide.md (MD brackets, MD deductions, exemptions, local rates)
+  - reference/curated/georgia-500-guide.md (GA flat rate, deductions, dependent exemption, credits)
   - reference/curated/salt-deduction-2025.md (SALT cap mechanics)
   - reference/curated/retirement-hsa-limits.md (401k, IRA, HSA limits — verify against IRS.gov)
   - reference/curated/self-employment-qbi.md (SE tax, QBI deduction)
@@ -98,28 +98,12 @@ FEDERAL_BRACKETS["MFS"] = FEDERAL_BRACKETS["Single"]
 
 
 # ---------------------------------------------------------------------------
-# Maryland State Income Tax Brackets — 2025 MFJ / HoH / QSS
-# (Source: 2025-tax-numbers.md, Maryland State Income Tax Brackets)
+# Georgia State Income Tax — 2025 flat rate, all filing statuses
+# (Source: 2025-tax-numbers.md, Georgia State Income Tax;
+#  georgia-500-guide.md, Tax Computation, Line 16)
 # ---------------------------------------------------------------------------
 
-MD_BRACKETS = {
-    "MFJ": [
-        (Decimal("1000"),    Decimal("0.02"),   Decimal("0")),
-        (Decimal("2000"),    Decimal("0.03"),   Decimal("20")),
-        (Decimal("3000"),    Decimal("0.04"),   Decimal("50")),
-        (Decimal("150000"),  Decimal("0.0475"), Decimal("90")),
-        (Decimal("175000"),  Decimal("0.05"),   Decimal("7072.50")),
-        (Decimal("225000"),  Decimal("0.0525"), Decimal("8322.50")),
-        (Decimal("300000"),  Decimal("0.055"),  Decimal("10947.50")),
-        (Decimal("600000"),  Decimal("0.0575"), Decimal("15072.50")),
-        (Decimal("1200000"), Decimal("0.0625"), Decimal("32322.50")),
-        (None,               Decimal("0.065"),  Decimal("69822.50")),
-    ],
-}
-# Alias: same brackets used for HoH and QSS
-MD_BRACKETS["HoH"] = MD_BRACKETS["MFJ"]
-MD_BRACKETS["Single"] = MD_BRACKETS["MFJ"]  # MD uses same brackets for all statuses
-MD_BRACKETS["MFS"] = MD_BRACKETS["MFJ"]
+GA_TAX_RATE = Decimal("0.0519")
 
 
 # ---------------------------------------------------------------------------
@@ -149,55 +133,24 @@ SALT_PHASE_OUT_RATE = Decimal("0.30")
 
 
 # ---------------------------------------------------------------------------
-# Maryland Deduction Parameters (Source: maryland-502-guide.md)
+# Georgia Deduction Parameters (Source: georgia-500-guide.md)
 # ---------------------------------------------------------------------------
 
-MD_STANDARD_DEDUCTION = {
-    "MFJ": Decimal("6700"),
-    "Single": Decimal("3350"),
-    "MFS": Decimal("3350"),
-    "HoH": Decimal("6700"),
+GA_STANDARD_DEDUCTION = {
+    "MFJ": Decimal("24000"),
+    "Single": Decimal("12000"),
+    "MFS": Decimal("12000"),
+    "HoH": Decimal("12000"),  # GA gives HoH no premium over Single
 }
 
-# Itemized deduction phase-out: 7.5% of FAGI over threshold
-# (Source: maryland-502-guide.md, Itemized Deduction Phase-Out)
-MD_ITEMIZED_PHASEOUT = {
-    "MFJ":    {"threshold": Decimal("200000"), "rate": Decimal("0.075")},
-    "Single": {"threshold": Decimal("200000"), "rate": Decimal("0.075")},
-    "HoH":    {"threshold": Decimal("200000"), "rate": Decimal("0.075")},
-    "MFS":    {"threshold": Decimal("100000"), "rate": Decimal("0.075")},
-}
+# Dependent exemption: $4,000 per dependent (Line 7c x $4,000).
+# No personal exemption for taxpayer/spouse, and no income phase-out.
+# (Source: georgia-500-guide.md, Line 14)
+GA_DEPENDENT_EXEMPTION = Decimal("4000")
 
-# Personal exemption: $3,200/person, phased out at high income
-# (Source: maryland-502-guide.md, Exemptions)
-MD_EXEMPTION_TIERS = {
-    "MFJ": [
-        (Decimal("150000"), Decimal("3200")),   # up to $150K: full $3,200/person
-        (Decimal("175000"), Decimal("1600")),   # $150K-$175K: $1,600/person
-        (Decimal("200000"), Decimal("800")),    # $175K-$200K: $800/person
-        (None,              Decimal("0")),      # over $200K: $0
-    ],
-}
-MD_EXEMPTION_TIERS["Single"] = MD_EXEMPTION_TIERS["MFJ"]
-MD_EXEMPTION_TIERS["HoH"] = MD_EXEMPTION_TIERS["MFJ"]
-MD_EXEMPTION_TIERS["MFS"] = MD_EXEMPTION_TIERS["MFJ"]
-
-# Two-income married subtraction (Source: maryland-502-guide.md, Two-Income Subtraction)
-MD_TWO_INCOME_SUBTRACTION_MAX = Decimal("1200")
-
-# Maryland local tax rates (Source: 2025-tax-numbers.md, Maryland Local Tax Rates)
-MD_LOCAL_RATES = {
-    "Montgomery": Decimal("0.032"),
-    "Baltimore City": Decimal("0.032"),
-    "Howard": Decimal("0.032"),
-    "Dorchester": Decimal("0.033"),
-    # Default for other counties — user should verify
-    "default": Decimal("0.032"),
-}
-
-# Capital gains surtax (Source: maryland-502-guide.md, Capital Gains Surtax)
-MD_CAP_GAINS_SURTAX_THRESHOLD = Decimal("350000")
-MD_CAP_GAINS_SURTAX_RATE = Decimal("0.02")
+# Eligible Itemizer Tax Credit: up to $300 per taxpayer when itemizing,
+# nonrefundable, cannot exceed GA tax. (Source: georgia-500-guide.md, Line 19)
+GA_ITEMIZER_CREDIT_PER_TAXPAYER = Decimal("300")
 
 
 # ---------------------------------------------------------------------------
@@ -261,7 +214,7 @@ def apply_brackets(taxable_income, brackets):
     """Compute tax from a bracket table.
 
     brackets: list of (upper_bound, rate, base_tax) tuples.
-    (Source: 2025-tax-numbers.md for federal, maryland-502-guide.md for MD)
+    (Source: 2025-tax-numbers.md, Federal Income Tax Brackets)
     """
     if taxable_income <= Decimal("0"):
         return Decimal("0")
@@ -333,60 +286,35 @@ def compute_federal_deduction(agi, itemized_components, filing_status):
         return {"type": "standard", "amount": cents(standard), "salt_after_cap": cents(salt_after_cap)}
 
 
-def compute_md_deduction(fagi, itemized_components, filing_status):
-    """Compute Maryland deduction (standard vs itemized with phase-out).
+def compute_ga_deduction(fed_deduction, other_state_income_tax, filing_status):
+    """Compute Georgia deduction (Form 500 Lines 11 / 12a-c).
 
-    MD itemized = federal itemized components MINUS state/local income taxes.
-    Then apply 7.5% phase-out on FAGI excess over $200K.
-    (Source: maryland-502-guide.md, Itemized Deduction for Maryland;
-     maryland-502-guide.md, Itemized Deduction Phase-Out)
+    Georgia LOCKS the deduction type to the federal return: if you itemized
+    federally you must itemize for GA; if you took the federal standard
+    deduction you must take the GA standard deduction.
+    GA itemized (Line 12c) = federal Schedule A total (Line 12a, after the
+    federal SALT cap) MINUS income taxes paid to states other than Georgia
+    and investment interest for GA-exempt income (Line 12b). Georgia income
+    tax itself is NOT backed out.
+    (Source: georgia-500-guide.md, Deduction Section, Lines 11-12c)
     """
-    md_standard = MD_STANDARD_DEDUCTION.get(filing_status, MD_STANDARD_DEDUCTION["MFJ"])
+    ga_standard = GA_STANDARD_DEDUCTION.get(filing_status, GA_STANDARD_DEDUCTION["MFJ"])
 
-    # MD itemized: federal itemized minus state/local income taxes
-    mortgage_interest = d(itemized_components.get("mortgage_interest"))
-    charitable = d(itemized_components.get("charitable"))
-    real_estate = d(itemized_components.get("real_estate_tax"))
-    personal_property = d(itemized_components.get("personal_property_tax"))
-    medical_gross = d(itemized_components.get("medical_expenses"))
-    medical_floor = MEDICAL_THRESHOLD_RATE * fagi
-    medical_deduction = max(Decimal("0"), medical_gross - medical_floor)
-    other = d(itemized_components.get("other_itemized"))
-
-    # Note: real_estate and personal_property ARE included in MD itemized
-    # (they are property taxes, not state/local income taxes)
-    md_itemized_before_phaseout = (
-        mortgage_interest + charitable + real_estate + personal_property
-        + medical_deduction + other
-    )
-
-    # Apply 7.5% phase-out
-    phaseout = MD_ITEMIZED_PHASEOUT.get(filing_status, MD_ITEMIZED_PHASEOUT["MFJ"])
-    if fagi > phaseout["threshold"]:
-        excess = fagi - phaseout["threshold"]
-        reduction = phaseout["rate"] * excess
-        md_itemized_after_phaseout = max(Decimal("0"), md_itemized_before_phaseout - reduction)
+    if fed_deduction["type"] == "itemized":
+        ga_itemized = max(Decimal("0"), fed_deduction["amount"] - other_state_income_tax)
+        return {"type": "itemized", "amount": cents(ga_itemized)}
     else:
-        md_itemized_after_phaseout = md_itemized_before_phaseout
-
-    if md_itemized_after_phaseout > md_standard:
-        return {"type": "itemized", "amount": cents(md_itemized_after_phaseout)}
-    else:
-        return {"type": "standard", "amount": cents(md_standard)}
+        return {"type": "standard", "amount": cents(ga_standard)}
 
 
-def compute_md_exemption(fagi, filing_status, num_exemptions=2):
-    """Compute Maryland personal exemption amount.
+def compute_ga_exemption(num_dependents=0):
+    """Compute Georgia dependent exemption (Form 500 Line 14).
 
-    (Source: maryland-502-guide.md, Exemptions)
+    $4,000 per dependent (Line 7c). No personal exemption for taxpayer or
+    spouse, and no income phase-out.
+    (Source: georgia-500-guide.md, Line 14)
     """
-    tiers = MD_EXEMPTION_TIERS.get(filing_status, MD_EXEMPTION_TIERS["MFJ"])
-    per_person = Decimal("0")
-    for ceiling, amount in tiers:
-        if ceiling is None or fagi <= ceiling:
-            per_person = amount
-            break
-    return cents(per_person * Decimal(str(num_exemptions)))
+    return cents(GA_DEPENDENT_EXEMPTION * Decimal(str(num_dependents)))
 
 
 def compute_se_tax(schedule_c_net, total_wages):
@@ -478,9 +406,13 @@ def compute_total_tax(params):
     dividends_ordinary = d(params.get("dividends_ordinary"))
     capital_gain = d(params.get("capital_gain"))
     schedule_c_net = d(params.get("schedule_c_net"))
+    # Allowed Schedule E rental net income/loss (after Form 8582 limits —
+    # use schedule_e_calculator.py Line 26). No SE tax on rental income.
+    # (Source: schedule-e-guide.md)
+    schedule_e_net = d(params.get("schedule_e_net"))
     other_income = d(params.get("other_income"))
 
-    gross_income = total_wages + interest + dividends_ordinary + capital_gain + schedule_c_net + other_income
+    gross_income = total_wages + interest + dividends_ordinary + capital_gain + schedule_c_net + schedule_e_net + other_income
 
     # --- SE Tax (if applicable) ---
     se_tax, se_deductible_half = compute_se_tax(schedule_c_net, total_wages)
@@ -537,43 +469,36 @@ def compute_total_tax(params):
     else:
         additional_medicare = Decimal("0")
 
-    # --- Maryland State Tax ---
-    # MD subtractions
+    # --- Georgia State Tax (Form 500) ---
+    # GA Schedule 1 adjustments (Source: georgia-500-guide.md, Schedule 1)
     us_obligation_interest = d(params.get("us_obligation_interest"))
-    two_income_subtraction = Decimal("0")
-    if filing_status == "MFJ" and wages_primary > Decimal("0") and wages_spouse > Decimal("0"):
-        smaller_income = min(wages_primary, wages_spouse)
-        two_income_subtraction = min(smaller_income, MD_TWO_INCOME_SUBTRACTION_MAX)
-    total_md_subtractions = us_obligation_interest + two_income_subtraction
+    ga_other_subtractions = d(params.get("ga_other_subtractions"))   # e.g., retirement exclusion, 529
+    ga_additions = d(params.get("ga_additions"))                      # e.g., non-GA muni interest, bonus depreciation addback
+    ga_agi = agi + ga_additions - us_obligation_interest - ga_other_subtractions
 
-    md_agi = agi - total_md_subtractions
+    # GA deduction — locked to the federal deduction type
+    other_state_income_tax = d(params.get("other_state_income_tax"))
+    ga_deduction = compute_ga_deduction(fed_deduction, other_state_income_tax, filing_status)
 
-    # MD deduction
-    md_deduction = compute_md_deduction(agi, itemized_components, filing_status)
+    # GA dependent exemption ($4,000 per dependent, no phase-out)
+    num_dependents = int(params.get("num_dependents", 0))
+    ga_exemption = compute_ga_exemption(num_dependents)
 
-    # MD exemption
-    num_exemptions = int(params.get("num_exemptions", 2 if filing_status == "MFJ" else 1))
-    md_exemption = compute_md_exemption(agi, filing_status, num_exemptions)
+    # GA taxable income (Line 15c; NOL not modeled)
+    ga_taxable = max(Decimal("0"), ga_agi - ga_deduction["amount"] - ga_exemption)
 
-    # MD taxable net income
-    md_taxable = max(Decimal("0"), md_agi - md_deduction["amount"] - md_exemption)
+    # GA tax — flat rate (Line 16)
+    ga_state_tax = cents(ga_taxable * GA_TAX_RATE)
 
-    # MD state tax
-    md_brackets = MD_BRACKETS.get(filing_status, MD_BRACKETS["MFJ"])
-    md_state_tax = apply_brackets(md_taxable, md_brackets)
-
-    # MD local tax
-    county = params.get("county", "Montgomery")
-    local_rate = MD_LOCAL_RATES.get(county, MD_LOCAL_RATES["default"])
-    md_local_tax = cents(md_taxable * local_rate)
-
-    # MD capital gains surtax
-    md_cap_gains_surtax = Decimal("0")
-    if agi > MD_CAP_GAINS_SURTAX_THRESHOLD and capital_gain > Decimal("0"):
-        md_cap_gains_surtax = cents(capital_gain * MD_CAP_GAINS_SURTAX_RATE)
+    # GA Eligible Itemizer Tax Credit (Line 19): $300/taxpayer when itemizing
+    ga_itemizer_credit = Decimal("0")
+    if ga_deduction["type"] == "itemized":
+        num_taxpayers = Decimal("2") if filing_status == "MFJ" else Decimal("1")
+        ga_itemizer_credit = min(GA_ITEMIZER_CREDIT_PER_TAXPAYER * num_taxpayers, ga_state_tax)
+    ga_state_tax = cents(ga_state_tax - ga_itemizer_credit)
 
     # --- Total Tax ---
-    total_tax = cents(federal_tax + se_tax + additional_medicare + md_state_tax + md_local_tax + md_cap_gains_surtax)
+    total_tax = cents(federal_tax + se_tax + additional_medicare + ga_state_tax)
 
     # --- Effective Rate ---
     effective_rate = Decimal("0")
@@ -591,13 +516,12 @@ def compute_total_tax(params):
         "federal_tax": str(cents(federal_tax)),
         "se_tax": str(cents(se_tax)),
         "additional_medicare_tax": str(cents(additional_medicare)),
-        "md_deduction_type": md_deduction["type"],
-        "md_deduction_amount": str(cents(md_deduction["amount"])),
-        "md_exemption": str(cents(md_exemption)),
-        "md_taxable_income": str(cents(md_taxable)),
-        "md_state_tax": str(cents(md_state_tax)),
-        "md_local_tax": str(cents(md_local_tax)),
-        "md_cap_gains_surtax": str(cents(md_cap_gains_surtax)),
+        "ga_deduction_type": ga_deduction["type"],
+        "ga_deduction_amount": str(cents(ga_deduction["amount"])),
+        "ga_exemption": str(cents(ga_exemption)),
+        "ga_taxable_income": str(cents(ga_taxable)),
+        "ga_itemizer_credit": str(cents(ga_itemizer_credit)),
+        "ga_state_tax": str(cents(ga_state_tax)),
         "total_tax": str(cents(total_tax)),
         "effective_rate": pct(effective_rate),
     }
@@ -728,9 +652,10 @@ def _quick_agi(params):
     dividends = d(params.get("dividends_ordinary"))
     cap_gain = d(params.get("capital_gain"))
     sched_c = d(params.get("schedule_c_net"))
+    sched_e = d(params.get("schedule_e_net"))
     other = d(params.get("other_income"))
     adjustments = d(params.get("adjustments")) + d(params.get("hsa_contributions")) + d(params.get("ira_deduction"))
-    return wages + interest + dividends + cap_gain + sched_c + other - adjustments
+    return wages + interest + dividends + cap_gain + sched_c + sched_e + other - adjustments
 
 
 # ---------------------------------------------------------------------------
@@ -762,7 +687,7 @@ def what_if(data):
 
     # Compute savings (positive = tax saved)
     savings = {}
-    for key in ["federal_tax", "se_tax", "additional_medicare_tax", "md_state_tax", "md_local_tax", "md_cap_gains_surtax", "total_tax"]:
+    for key in ["federal_tax", "se_tax", "additional_medicare_tax", "ga_state_tax", "total_tax"]:
         baseline_val = d(baseline_result[key])
         modified_val = d(modified_result[key])
         savings[key] = str(cents(baseline_val - modified_val))
@@ -778,7 +703,7 @@ def what_if(data):
         total_tax = d(modified_result["total_tax"])
         paychecks_per_year = int(scenario.get("pay_periods", 26))
         fed_tax = d(modified_result["federal_tax"]) + d(modified_result["additional_medicare_tax"]) + d(modified_result["se_tax"])
-        state_tax = d(modified_result["md_state_tax"]) + d(modified_result["md_local_tax"]) + d(modified_result["md_cap_gains_surtax"])
+        state_tax = d(modified_result["ga_state_tax"])
         withholding_recommendation = {
             "total_tax_liability": str(cents(total_tax)),
             "federal_per_paycheck": str(cents(fed_tax / Decimal(str(paychecks_per_year)))),

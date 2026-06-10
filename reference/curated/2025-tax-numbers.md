@@ -4,12 +4,12 @@
 - Instructions for Form 1040 (2025), Catalog Number 24811V, Feb 25, 2026 — pp. 6–9 (What's New, Filing Requirements)
 - Bipartisan Policy Center, "2025 Federal Income Tax Brackets and Other 2025 Tax Rules," Jan 29, 2026
 - One Big Beautiful Bill Act (OBBBA), H.R. 1, signed July 4, 2025
-- Maryland 2025 Resident Booklet, Instruction 17 (Tax Rate Schedules)
-- Maryland Tax Alert, "Changes to Standard and Itemized Deductions and to State and Local Income Tax Rates," revised Dec 22, 2025
+- 2025 IT-511 Georgia Individual Income Tax Instruction Booklet (dor.georgia.gov; local copy at `reference/Raw/2025-it511-booklet.pdf`)
+- Georgia HB 111 (2025 Session) — rate reduction to 5.19% for tax year 2025
 
 ## Applicable To
-- **Forms:** Form 1040 (all lines), Schedule A, Schedule 1-A, Schedule 2, Form 8959, MD Form 502
-- **Workflow Steps:** Step 1 (W-2 Income), Step 6 (Deductions), Step 7 (Tax Computation), Step 10 (Maryland 502)
+- **Forms:** Form 1040 (all lines), Schedule A, Schedule 1-A, Schedule 2, Form 8959, GA Form 500
+- **Workflow Steps:** Step 1 (W-2 Income), Step 6 (Deductions), Step 7 (Tax Computation), Step 10 (Georgia 500)
 
 ---
 
@@ -109,46 +109,46 @@
 
 ---
 
-## Maryland State Income Tax Brackets — MFJ / HoH / QSS (2025)
+## Georgia State Income Tax (2025)
 
-| Rate | Taxable Net Income Range | Tax on Lower Bracket |
-|------|--------------------------|---------------------|
-| 2.00% | $1 – $1,000 | $0 |
-| 3.00% | $1,001 – $2,000 | $20 |
-| 4.00% | $2,001 – $3,000 | $50 |
-| 4.75% | $3,001 – $150,000 | $90 |
-| 5.00% | $150,001 – $175,000 | $7,072.50 |
-| 5.25% | $175,001 – $225,000 | $8,322.50 |
-| 5.50% | $225,001 – $300,000 | $10,947.50 |
-| 5.75% | $300,001 – $600,000 | $15,072.50 |
-| 6.25% | $600,001 – $1,200,000 | $32,322.50 |
-| 6.50% | Over $1,200,000 | $69,822.50 |
+Georgia has a **flat tax** — one rate for all filing statuses and income levels:
 
-[MD Resident Booklet (2025), Instruction 17, Tax Rate Schedule II]
+| Parameter | Value |
+|-----------|-------|
+| Tax rate (all filing statuses) | **5.19%** of GA taxable income |
+| Capital gains / qualified dividends | Taxed at the same flat 5.19% — no preferential rate |
+| Local income tax | **None** — Georgia has no county/city income tax |
 
-**New brackets for 2025 (BRFA):** 6.25% and 6.50% tiers added. Prior top rate was 5.75%.
+[IT-511 (2025), Form 500 Instructions, Line 16, p. 17; HB 111 (2025)]
 
-## Maryland Local Tax Rates (2025)
+**New for 2025 (HB 111):** rate reduced from 5.39% to 5.19%, with further 0.10%/year reductions toward 4.99% contingent on state revenue conditions.
 
-| Jurisdiction | Rate |
-|-------------|------|
-| Montgomery County | 3.20% |
-| Baltimore City | 3.20% |
-| Howard County | 3.20% |
-| Dorchester County | 3.30% (new for 2025) |
+## Georgia Standard Deduction (2025)
 
-[MD Resident Booklet (2025), Instruction 19, Local Tax Rate Chart; MD Tax Alert, revised Dec 22, 2025]
+| Filing Status | Amount |
+|--------------|--------|
+| Married filing jointly | $24,000 |
+| Single / MFS / HoH / QSS | $12,000 |
 
-## Other Maryland Numbers
+[IT-511 (2025), Line 11, p. 16]
+
+⚠️ If you itemize federally you MUST itemize on the Georgia return, and vice versa for the standard deduction. [IT-511 (2025), Lines 11–12, pp. 16–17]
+
+## Other Georgia Numbers
 
 | Parameter | Value | Citation |
 |-----------|-------|---------|
-| Standard deduction (MFJ) | $6,700 | [MD Tax Alert, Section IV.A] |
-| Standard deduction (Single/MFS) | $3,350 | [MD Tax Alert, Section IV.A] |
-| Two-income subtraction (MFJ) | $1,200 max | [MD Resident Booklet, Instruction 13D] |
-| Personal exemption | $3,200 (reduced above $150K FAGI MFJ) | [MD Resident Booklet, Instruction 10A] |
-| Itemized deduction phase-out | 7.5% of FAGI over $200,000 ($100,000 MFS) | [MD Tax Alert, Section IV.B] |
-| Capital gains surtax | 2% on net capital gains if FAGI > $350,000 | [MD Tax Alert, Section III] |
+| Dependent exemption | $4,000 per dependent (Line 7c × $4,000) | [IT-511 (2025), Line 14, p. 17] |
+| Personal exemption (self/spouse) | $0 — eliminated after 12/31/2023 | [IT-511 (2025), Line 6, p. 16] |
+| GA itemized deduction | Federal Schedule A − other states' income taxes − investment interest for GA-exempt income | [IT-511 (2025), Lines 12a–c, p. 17] |
+| Eligible Itemizer Tax Credit | Up to $300 per taxpayer (if itemizing) | [IT-511 (2025), Line 19, p. 18] |
+| Low Income Credit | Available if federal AGI < $20,000 | [IT-511 (2025), Line 17, p. 17] |
+| Retirement income exclusion | $35,000 (age 62–64/disabled); $65,000 (65+); per spouse | [IT-511 (2025), Subtractions #1, p. 21] |
+| Path2College 529 deduction | $4,000/beneficiary ($8,000 MFJ) | [IT-511 (2025), Subtractions #15, p. 23] |
+| GA NOL limitation | 80% of GA income (post-2018 NOLs) | [IT-511 (2025), Line 15b, p. 17] |
+| IRC conformity | As of Jan 1, 2025 — OBBBA NOT adopted | [IT-511 (2025), p. 5] |
+| Bonus depreciation (§168(k)) | NOT adopted — addback required | [GA DOR, Income Tax Federal Tax Changes] |
+| QBI deduction (§199A) | Not allowed, but no adjustment needed (GA starts from federal AGI) | [IT-511 (2025), p. 21] |
 
 ---
 

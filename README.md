@@ -12,9 +12,9 @@
 
 A set of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills that turn tax filing from a solo ordeal into a structured conversation. You provide your tax documents. Claude extracts every value, generates line-by-line cheat sheets as you fill each form, audits your completed return for errors before you file, and models what-if scenarios for next year.
 
-Built for **tax year 2025**, covering U.S. federal (Form 1040) and Maryland state (Form 502). The architecture is designed so you can adapt it for any state.
+Built for **tax year 2025**, covering U.S. federal (Form 1040) and Georgia state (Form 500). (Forked from the original Maryland version — the architecture is designed so you can adapt it for any state.)
 
-> **Scope:** Federal (Form 1040) + Maryland (Form 502). Optimized for filers with W-2 wages, investment income, small self-employment (Schedule C), mortgage interest, and student loans. Does not currently cover rental income (Schedule E), foreign income, farm income (Schedule F), or complex credits (Child Tax Credit, Education Credits, EIC) — but the architecture is designed to be extended. See [Customizing for Your State](#customizing-for-your-state) and [reference/HOW-TO-CURATE.md](reference/HOW-TO-CURATE.md) for how to add coverage.
+> **Scope:** Federal (Form 1040) + Georgia (Form 500). Optimized for filers with W-2 wages, investment income, small self-employment (Schedule C), **rental real estate (Schedule E — including single-member LLCs and short/mid/long-term rentals, with depreciation and passive-loss limits)**, mortgage interest, and student loans. Does not currently cover partnerships/S-corps with K-1s (Schedule E Part II), foreign income, farm income (Schedule F), or complex credits (Child Tax Credit, Education Credits, EIC) — but the architecture is designed to be extended. See [Customizing for Your State](#customizing-for-your-state) and [reference/HOW-TO-CURATE.md](reference/HOW-TO-CURATE.md) for how to add coverage.
 
 **This is not a tax preparation app.** It's a workflow — a set of skills that make Claude Code behave like a methodical, citation-obsessed tax assistant that never does mental math.
 
@@ -80,6 +80,7 @@ Output forms always leave SSN, bank routing, account numbers, and signature fiel
 1. Clone this repo
 2. Open the project in Claude Code
 3. Create a `my-tax-docs/` folder and add your tax documents
+   - Optional: put prior-year returns (2023/2024) in `my-tax-docs/prior-years/` — `/tax-prep` extracts carryovers (suspended passive losses, depreciation schedules, QBI/capital-loss carryforwards) into a PII-scanned JSON; a local LLM agent can do the extraction instead via the handoff template. See [docs/PRIOR-YEAR-DATA.md](docs/PRIOR-YEAR-DATA.md)
 4. Type `/tax-prep` to extract your document values
 5. Use `/tax-cheatsheet` to get line-by-line guidance — use the cheat sheet as a reference while you fill forms in your tax software or on paper
 6. Run `/tax-audit` before submitting to catch errors
@@ -87,11 +88,11 @@ Output forms always leave SSN, bank routing, account numbers, and signature fiel
 
 ### Customizing for Your State
 
-This project was built for Maryland (Form 502). To adapt for your state:
+This fork is set up for Georgia (Form 500); the original was built for Maryland (Form 502). To adapt for your state:
 
-1. **Replace** `reference/curated/maryland-502-guide.md` with a guide for your state's return
-2. **Update** `reference/curated/2025-tax-numbers.md` — replace the Maryland brackets and local tax rates with your state's
-3. **Update** `.claude/skills/tax-advisor/scripts/what_if.py` — replace the MD state/local bracket tables with your state's
+1. **Replace** `reference/curated/georgia-500-guide.md` with a guide for your state's return
+2. **Update** `reference/curated/2025-tax-numbers.md` — replace the Georgia flat rate and deductions with your state's
+3. **Update** `.claude/skills/tax-advisor/scripts/what_if.py` — replace the GA flat-rate computation with your state's brackets
 4. **Modify** `.claude/skills/tax-audit/scripts/cross_check.py` — update the state withholding check (check #7) to match your state's form and line
 5. Follow `reference/HOW-TO-CURATE.md` for the curation format
 
@@ -109,9 +110,11 @@ This project was built for Maryland (Form 502). To adapt for your state:
 | Script | Skill | Purpose |
 |--------|-------|---------|
 | `validate_extraction.py` | /tax-prep | Validate extracted CSV for anomalies (zero withholding, missing cost basis, duplicates) |
+| `validate_prior_year.py` | /tax-prep | Validate prior-year carryover JSON — schema checks + PII scanner (rejects SSNs, account-like numbers) |
 | `form_line_lookup.py` | /tax-cheatsheet | Query CSV by document type and box number |
 | `standard_vs_itemized.py` | /tax-cheatsheet | Compare standard deduction vs. itemized with SALT cap |
 | `schedule_c_calculator.py` | /tax-cheatsheet | Schedule C: COGS, expenses, net profit/loss, SE tax flag, QBI |
+| `schedule_e_calculator.py` | /tax-cheatsheet | Schedule E: per-property P&L, MACRS depreciation, passive-loss limits, GA bonus addback |
 | `salt_cap_calculator.py` | /tax-cheatsheet | SALT deduction with $40K cap and MAGI phase-out |
 | `cross_check.py` | /tax-audit | 10 cross-checks: income match, AGI math, withholding, brackets |
 | `completeness_check.py` | /tax-audit | Document coverage, required forms, orphaned documents |
@@ -143,7 +146,10 @@ Each curated file covers one topic (e.g., SALT deduction, mortgage interest, Sch
 | `2025-tax-numbers.md` | Federal/state brackets, deductions, thresholds |
 | `additional-medicare-tax.md` | Form 8959 (0.9% Additional Medicare Tax) |
 | `investment-income.md` | Schedule B, Schedule D, qualified dividends, capital gains |
-| `maryland-502-guide.md` | MD Form 502 line-by-line, subtractions, phase-outs |
+| `georgia-500-guide.md` | GA Form 500 line-by-line, Schedule 1 adjustments, credits |
+| `schedule-e-guide.md` | Schedule E rental real estate, SMLLC, STR/MTR classification |
+| `rental-depreciation.md` | 27.5/39-yr MACRS, basis, bonus depreciation, GA addback |
+| `passive-activity-losses.md` | Form 8582, $25K allowance, 7-day/30-day exceptions |
 | `mortgage-interest.md` | Mortgage interest deduction (Pub 936) |
 | `niit-form-8960.md` | Net Investment Income Tax (3.8%) |
 | `retirement-hsa-limits.md` | 401(k), IRA, HSA contribution limits |

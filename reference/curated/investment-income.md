@@ -69,11 +69,12 @@
 - The disallowed loss is added to the basis of the replacement security.
 - Broker reports wash sale adjustments on Form 1099-B.
 
-### U.S. Government Obligation Interest — Maryland Exemption
-- Interest on U.S. Treasury securities (T-bills, T-notes, T-bonds, I-bonds, EE/HH bonds) is **exempt from Maryland state and local income tax**. [MD Resident Booklet, Instruction 13, Code ab]
-- Report on Form 502SU, subtraction code **ab**.
-- Dividends from mutual funds that invest in U.S. obligations are partially exempt — only the portion attributable to U.S. obligation interest/gains can be subtracted.
-- **GNMA (Ginnie Mae) interest is NOT exempt** from MD tax. [MD Resident Booklet, Instruction 13, Code ab]
+### U.S. Government Obligation Interest — Georgia Exemption
+- Interest on U.S. Government obligations (T-bills, T-notes, T-bonds, savings bonds) is **exempt from Georgia income tax**. [IT-511 (2025), Schedule 1 Subtractions #4, p. 22]
+- Report as a subtraction on GA Form 500 Schedule 1; the amount must be reduced by direct and indirect interest expenses attributable to the income.
+- Dividends from mutual funds that invest in U.S. obligations are partially exempt — only the portion attributable to U.S. obligation interest can be subtracted.
+- **FNMA (Fannie Mae), GNMA (Ginnie Mae), and FHLB interest is NOT exempt** from Georgia tax, nor is interest from repurchase agreements. [IT-511 (2025), Schedule 1 Subtractions #4, p. 22]
+- Conversely, interest on **non-Georgia municipal bonds** (federally tax-exempt) must be ADDED to Georgia income. [IT-511 (2025), Schedule 1 Additions #1, p. 20]
 
 ---
 

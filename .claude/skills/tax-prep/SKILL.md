@@ -11,6 +11,7 @@ Document extraction and inventory — the data intake phase that runs **before**
 
 Every conversation starts here:
 
+0. Check if `analysis/prior-year-carryovers-*.json` files exist — if so, mention which prior years are on file; if not and this is a new session, ask whether the user has 2023/2024 returns to ingest (see Prior-Year Returns Workflow below)
 1. Check if `analysis/tax-doc-summary.csv` already exists
 2. If it exists:
    - Count distinct documents and total rows
@@ -37,11 +38,23 @@ When extracting, consult this table to know which boxes matter for each form. Ex
 | **1099-R** | 1, 2a, 2b, 4, 7 | Retirement distributions, taxable amount, distribution code | 1040 Lines 4a–5b |
 | **1099-G** | 1, 5 | State tax refund, unemployment compensation | Schedule 1 Lines 1, 7 |
 | **1099-NEC** | 1, 4 | Non-employee compensation, federal tax withheld | Schedule C; 1040 Line 25a |
+| **1099-MISC** | 1, 2, 4 | Rents (from property managers), royalties, withholding | Schedule E Line 3 |
 | **1099-SA** | 1, 2, 3 | HSA/MSA distributions, earnings, gross distribution | Form 8889 |
 | **1095-C** | 14–16 | Health coverage verification | ACA compliance (reference only) |
 | **W-2G** | 1, 4, 7 | Gambling winnings, withholding, state winnings | Schedule 1; 1040 Line 25a |
 
 For **1099-B statements with many transactions** (e.g., dozens of stock trades), extract aggregate totals per category (short-term covered, long-term covered, etc.) rather than individual transactions. Record one summary row per category with total proceeds, total basis, and total gain/loss.
+
+### Rental Property Records (Schedule E)
+
+Most rental data does NOT arrive on IRS forms. For each rental property (including those held in single-member LLCs — disregarded entities report on the owner's return), extract from property-manager annual statements, mortgage 1098s, county property tax bills, and the user's expense log:
+
+- **Document label:** `Rental (address - LLC name if any)`, e.g., `Rental (456 Oak Ave - Oak LLC)` — the `Rental` prefix is what `completeness_check.py` keys on
+- **box_or_line:** the Schedule E line the value belongs to (`Line 3` rents received, `Line 7` cleaning/maintenance, `Line 9` insurance, `Line 11` management fees, `Line 12` mortgage interest, `Line 14` repairs, `Line 16` taxes, `Line 17` utilities, `Line 19` other)
+- Also record per property (as text-value rows): date placed in service, building cost basis, land value, prior accumulated depreciation, fair rental days, personal use days, average rental period (short/mid/long-term classification), and whether substantial services are provided
+- A 1099-MISC from a property manager records under its own `1099-MISC (...)` label; reconcile its Box 1 against the management statement gross rents
+
+*(Source: schedule-e-guide.md; rental-depreciation.md)*
 
 ## Extraction Workflow
 
@@ -62,6 +75,21 @@ For each document the user provides:
 If a document cannot be read (low-quality scan, password-protected PDF, unsupported format):
 - Tell the user: "I can't read [filename] — it appears to be [reason]. Could you provide a clearer copy, or enter the values manually?"
 - Offer a template: "Here are the boxes I'd need for a [form type]:" followed by the relevant rows from the Supported Document Types table
+
+## Prior-Year Returns Workflow (2023 / 2024)
+
+When the user provides prior-year returns or asks to "ingest prior years" (full design: `docs/PRIOR-YEAR-DATA.md`):
+
+1. **Locate the returns.** Look in `my-tax-docs/prior-years/` for federal 1040 + GA 500 PDFs, or accept a pre-extracted `prior-year-carryovers-<year>.json` produced by the user's local Hermes Agent (request template: `templates/hermes-extraction-request.md`).
+2. **Extract ONLY schema fields** (template: `templates/prior-year-carryovers-template.json`): carryovers (QBI, capital loss, NOL, suspended passive losses per property), depreciation schedules per asset, amounts applied to the next year, itemized status, GA Form 500 values. **NEVER transcribe SSNs, ITINs/EINs, bank/routing numbers, dates of birth, names, or full addresses** — property street labels only. Amounts as strings with cents.
+3. **Write** `analysis/prior-year-carryovers-<year>.json` (gitignored).
+4. **Validate** — mandatory before any downstream use:
+   ```bash
+   python .claude/skills/tax-prep/scripts/validate_prior_year.py '{"json_path": "analysis/prior-year-carryovers-2024.json"}'
+   ```
+   If `verdict` is `rejected`, report the PII findings/schema errors. For Hermes-produced files, return the offending JSON paths to the user so Hermes can re-extract — never hand-redact PII inside `analysis/`.
+5. **Report** which carryovers were found and which downstream skills will use them (suspended passive losses and depreciation → `/tax-cheatsheet` Schedule E; QBI/capital loss → Form 8995/Schedule D; prior-year tax → estimated-tax safe harbor; YoY comparison → `/tax-audit`).
+6. **Manual fallback:** if no PDFs and no Hermes file, walk the user through the template field by field (skipping unknowns), then validate the same way.
 
 ## CSV Output Format
 
@@ -119,6 +147,7 @@ Scripts accept a single CLI argument (JSON string) and print a JSON object to st
 | Script | Purpose |
 |--------|---------|
 | `validate_extraction.py` | Validate extracted CSV for anomalies and completeness |
+| `validate_prior_year.py` | Validate prior-year carryover JSON: schema + PII scan (rejects SSNs, account-like numbers, blocked keys) |
 
 ## Related Skills
 

@@ -321,6 +321,53 @@ def check_mortgage_property_tax(rows):
     }
 
 
+def check_rental_completeness(rows):
+    """Each 'Rental (...)' document should have rents (Line 3) and
+    depreciation inputs (basis/placed-in-service rows).
+
+    Depreciation is 'allowed or allowable' — a rental without basis data
+    cannot compute Line 18 and will misstate income.
+    (Source: rental-depreciation.md, Allowed or Allowable)
+    """
+    rentals = {}
+    for row in rows:
+        doc = row.get("document", "")
+        if doc.upper().startswith("RENTAL"):
+            info = rentals.setdefault(doc, {"has_rents": False, "has_basis": False})
+            box = row.get("box_or_line", "")
+            desc = row.get("description", "").lower()
+            if box == "Line 3":
+                info["has_rents"] = True
+            if "basis" in desc or "placed in service" in desc:
+                info["has_basis"] = True
+
+    if not rentals:
+        return {
+            "check": "rental_completeness",
+            "status": "pass",
+            "detail": "No rental property records in extraction"
+        }
+
+    issues = []
+    for doc, info in rentals.items():
+        if not info["has_rents"]:
+            issues.append(f"{doc}: no Line 3 (rents received) row")
+        if not info["has_basis"]:
+            issues.append(f"{doc}: no basis/placed-in-service rows — Line 18 depreciation cannot be computed")
+
+    if issues:
+        return {
+            "check": "rental_completeness",
+            "status": "warning",
+            "detail": "; ".join(issues)
+        }
+    return {
+        "check": "rental_completeness",
+        "status": "pass",
+        "detail": f"All {len(rentals)} rental record(s) have rents and depreciation inputs"
+    }
+
+
 def check_document_count(rows):
     """Report document count and warn if suspiciously low for a joint filer."""
     documents = set(row.get("document", "") for row in rows)
@@ -375,6 +422,7 @@ def validate(data):
         check_duplicates(rows),
         check_income_sanity(rows),
         check_mortgage_property_tax(rows),
+        check_rental_completeness(rows),
         check_document_count(rows),
     ]
 

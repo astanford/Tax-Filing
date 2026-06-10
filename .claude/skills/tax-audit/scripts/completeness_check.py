@@ -3,7 +3,7 @@ completeness_check.py — Document coverage, required forms detection,
 and orphaned document identification.
 
 Usage:
-    python completeness_check.py '{"csv_path": "analysis/tax-doc-summary.csv", "forms_filed": ["1040", "Schedule A", "Schedule B", "Schedule D", "MD 502"], "filing_status": "MFJ"}'
+    python completeness_check.py '{"csv_path": "analysis/tax-doc-summary.csv", "forms_filed": ["1040", "Schedule A", "Schedule B", "Schedule D", "GA 500"], "filing_status": "MFJ"}'
 
 Reads the extracted tax document CSV and checks:
 1. Every document is mapped to at least one filed form
@@ -79,14 +79,19 @@ DOC_TO_FORMS = {
     "1099-R": ["1040"],
     "1099-G": ["Schedule 1", "1040"],
     "1099-SA": ["1040"],
+    "1099-MISC": ["Schedule E"],
     "1095-C": [],
     "W-2G": ["1040", "Schedule 1"],
+    # Rental property records (property manager statements, expense logs)
+    # use document labels like "Rental (123 Main St)" — see tax-prep SKILL.md
+    "RENTAL": ["Schedule E"],
 }
 
 # Known document type prefixes for detection
 DOC_TYPE_ORDER = [
     "1099-INT", "1099-DIV", "1099-NEC", "1099-SA", "1099-B", "1099-K",
-    "1099-R", "1099-G", "1098-E", "1098-T", "1098", "1095-C", "W-2G", "W-2",
+    "1099-MISC", "1099-R", "1099-G", "1098-E", "1098-T", "1098", "1095-C",
+    "W-2G", "W-2", "RENTAL",
 ]
 
 
@@ -243,6 +248,35 @@ def check_required_forms(rows, forms_filed, filing_status):
             "filed": form_filed(forms_filed, "Schedule C")
         })
 
+    # --- Schedule E: 1099-MISC rents or rental property records ---
+    # (Source: schedule-e-guide.md)
+    has_1099misc = any("1099-MISC" in row.get("document", "").upper() for row in rows)
+    has_rental = any(row.get("document", "").upper().startswith("RENTAL") for row in rows)
+    if has_1099misc or has_rental:
+        sources = []
+        if has_1099misc:
+            sources.append("1099-MISC")
+        if has_rental:
+            sources.append("rental property records")
+        required.append({
+            "form": "Schedule E",
+            "status": "required",
+            "reason": f"Rental income documents present: {', '.join(sources)}",
+            "filed": form_filed(forms_filed, "Schedule E")
+        })
+        required.append({
+            "form": "Form 8582",
+            "status": "recommended",
+            "reason": "Rental activity present — required if there is a rental loss or prior suspended passive losses (see passive-activity-losses.md for the exception conditions)",
+            "filed": form_filed(forms_filed, "Form 8582")
+        })
+        required.append({
+            "form": "Form 4562",
+            "status": "recommended",
+            "reason": "Required if property/assets were placed in service this year or bonus depreciation is claimed (see rental-depreciation.md)",
+            "filed": form_filed(forms_filed, "Form 4562")
+        })
+
     # --- Schedule D: 1099-B or capital gain distributions ---
     has_1099b = any("1099-B" in row.get("document", "").upper() for row in rows)
     has_cap_gain_dist = False
@@ -267,12 +301,15 @@ def check_required_forms(rows, forms_filed, filing_status):
 
     # --- Schedule 1: if Schedule C is present, or 1098-E, or 1099-G ---
     has_sched_c = has_1099k or has_1099nec
+    has_sched_e = has_1099misc or has_rental
     has_1098e = any("1098-E" in row.get("document", "").upper() for row in rows)
     has_1099g = any("1099-G" in row.get("document", "").upper() for row in rows)
-    if has_sched_c or has_1098e or has_1099g:
+    if has_sched_c or has_sched_e or has_1098e or has_1099g:
         reasons = []
         if has_sched_c:
             reasons.append("Schedule C flows through Schedule 1 Line 3")
+        if has_sched_e:
+            reasons.append("Schedule E flows through Schedule 1 Line 5")
         if has_1098e:
             reasons.append("Student loan interest on Schedule 1 Line 21")
         if has_1099g:
@@ -317,25 +354,25 @@ def check_required_forms(rows, forms_filed, filing_status):
             "filed": form_filed(forms_filed, "Form 8995")
         })
 
-    # --- MD 502: if any W-2 has Maryland state data ---
-    has_md = False
+    # --- GA 500: if any W-2 has Georgia state data ---
+    has_ga = False
     for row in rows:
         doc = row.get("document", "").upper()
         box = row.get("box_or_line", "")
         val = row.get("value", "").upper()
-        if "W-2" in doc and box == "Box 15" and "MD" in val:
-            has_md = True
+        if "W-2" in doc and box == "Box 15" and "GA" in val:
+            has_ga = True
             break
         # Also check if Box 16 or 17 exist for W-2s (some CSVs may not have Box 15)
         if "W-2" in doc and box in ("Box 16", "Box 17"):
-            has_md = True
+            has_ga = True
 
-    if has_md:
+    if has_ga:
         required.append({
-            "form": "MD 502",
+            "form": "GA 500",
             "status": "required",
-            "reason": "W-2 contains Maryland state wage/withholding data",
-            "filed": form_filed(forms_filed, "MD 502")
+            "reason": "W-2 contains Georgia state wage/withholding data",
+            "filed": form_filed(forms_filed, "GA 500")
         })
 
     # --- Schedule A: if itemizing (check for 1098 mortgage data) ---

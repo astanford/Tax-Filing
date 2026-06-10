@@ -5,7 +5,7 @@
 ---
 
 Audited against `analysis/tax-doc-summary.csv` (4 documents, 20 values).
-Filing status: **MFJ**. Forms reviewed: Form 1040, Schedule A, MD 502.
+Filing status: **MFJ**. Forms reviewed: Form 1040, Schedule A, GA 500.
 
 ## 1. Income Verification
 
@@ -42,13 +42,13 @@ Filing status: **MFJ**. Forms reviewed: Form 1040, Schedule A, MD 502.
 | Check | Status | Expected (W-2 sum) | Form Value | Diff |
 |-------|--------|---------------------|------------|------|
 | Federal withholding (Line 25a) | **PASS** | $9,500.00 | $9,500.00 | $0.00 |
-| State withholding (MD 502 Line 40) | **PASS** | $3,850.00 | $3,850.00 | $0.00 |
+| State withholding (GA 500 Line 24) | **PASS** | $3,850.00 | $3,850.00 | $0.00 |
 
 ## 6. Cross-Return Consistency
 
-| Check | Status | Federal AGI | MD 502 Line 1 | Detail |
+| Check | Status | Federal AGI | GA 500 Line 8 | Detail |
 |-------|--------|-------------|----------------|--------|
-| Fed AGI = MD 502 Line 1 | **PASS** | $85,550.00 | $85,550.00 | Exact match |
+| Fed AGI = GA 500 Line 8 | **PASS** | $85,550.00 | $85,550.00 | Exact match |
 
 ## 7. Document Completeness
 
@@ -64,10 +64,10 @@ Filing status: **MFJ**. Forms reviewed: Form 1040, Schedule A, MD 502.
 |---------|--------|--------|
 | AGI includes all income | **PASS** | Wages + interest + dividends = $85,550 |
 | Math verified via Python | **PASS** | All computed values from cross_check.py |
-| State rules differ from federal | **PASS** | MD 502 uses MD-specific deduction |
+| State rules differ from federal | **PASS** | GA deduction type matches federal return |
 | W-2 Box 5 >= Box 1 | **PASS** | $85,000 >= $85,000 |
 | SALT cap on Schedule A only | **N/A** | Using standard deduction |
-| MD 502 Line 1 = Federal AGI | **PASS** | See Cross-Return check |
+| GA 500 Line 8 = Federal AGI | **PASS** | See Cross-Return check |
 | Student loan phase-out | **N/A** | No 1098-E in CSV |
 | QBI = $0 if Schedule C loss | **N/A** | No Schedule C |
 | Additional Medicare Tax threshold | **PASS** | Combined wages $85,000 < $250,000 MFJ threshold |

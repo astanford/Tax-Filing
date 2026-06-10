@@ -3,7 +3,7 @@ cross_check.py — Federal/state consistency, withholding match, AGI math,
 and tax bracket verification.
 
 Usage:
-    python cross_check.py '{"csv_path": "analysis/tax-doc-summary.csv", "federal_values": {"line_1_wages": "85000.00", "line_2b_interest": "200.00", "line_3b_dividends": "350.00", "line_7_capital_gain": "0.00", "line_8_other_income": "0.00", "line_9_total_income": "85550.00", "line_10_adjustments": "0.00", "line_11_agi": "85550.00", "line_12a_deduction": "31500.00", "line_13a_qbi": "0.00", "line_13b_sched1a": "0.00", "line_14_total_deductions": "31500.00", "line_15_taxable_income": "54050.00", "line_16_tax": "6197.00", "line_25a_w2_withholding": "9500.00"}, "state_values": {"line_1_agi": "85550.00", "line_40_withholding": "5200.00"}, "filing_status": "MFJ"}'
+    python cross_check.py '{"csv_path": "analysis/tax-doc-summary.csv", "federal_values": {"line_1_wages": "85000.00", "line_2b_interest": "200.00", "line_3b_dividends": "350.00", "line_7_capital_gain": "0.00", "line_8_other_income": "0.00", "line_9_total_income": "85550.00", "line_10_adjustments": "0.00", "line_11_agi": "85550.00", "line_12a_deduction": "31500.00", "line_13a_qbi": "0.00", "line_13b_sched1a": "0.00", "line_14_total_deductions": "31500.00", "line_15_taxable_income": "54050.00", "line_16_tax": "6197.00", "line_25a_w2_withholding": "9500.00"}, "state_values": {"line_8_fagi": "85550.00", "line_24_withholding": "4400.00"}, "filing_status": "MFJ"}'
 
 Reads the extracted tax document CSV and the user's completed form values,
 then runs 10 cross-checks comparing source documents to form entries.
@@ -265,9 +265,12 @@ def check_federal_withholding(rows, fv):
 
 
 def check_state_withholding(rows, sv):
-    """Check 8: MD 502 Line 40 vs sum of W-2 Box 17 from CSV."""
+    """Check 8: GA Form 500 Line 24 vs sum of W-2 Box 17 from CSV.
+
+    (Source: georgia-500-guide.md, Payments and Balance Due, Line 24)
+    """
     csv_sum, count = sum_csv(rows, "W-2", "Box 17")
-    form_val = d(sv.get("line_40_withholding"))
+    form_val = d(sv.get("line_24_withholding"))
     status = compare(csv_sum, form_val)
     return {
         "check_name": "state_withholding",
@@ -276,14 +279,17 @@ def check_state_withholding(rows, sv):
         "expected": str(cents(csv_sum)),
         "actual": str(cents(form_val)),
         "difference": str(cents(abs(csv_sum - form_val))),
-        "detail": f"MD 502 Line 40 ({fmt(form_val)}) vs sum of {count} W-2 Box 17 ({fmt(csv_sum)})"
+        "detail": f"GA 500 Line 24 ({fmt(form_val)}) vs sum of {count} W-2 Box 17 ({fmt(csv_sum)})"
     }
 
 
 def check_fed_state_agi_match(fv, sv):
-    """Check 9: 1040 Line 11 = MD 502 Line 1."""
+    """Check 9: 1040 Line 11 = GA Form 500 Line 8.
+
+    (Source: georgia-500-guide.md, Income Section, Line 8)
+    """
     fed_agi = d(fv.get("line_11_agi"))
-    state_agi = d(sv.get("line_1_agi"))
+    state_agi = d(sv.get("line_8_fagi"))
     status = compare(fed_agi, state_agi)
     return {
         "check_name": "fed_state_agi_match",
@@ -292,7 +298,30 @@ def check_fed_state_agi_match(fv, sv):
         "expected": str(cents(fed_agi)),
         "actual": str(cents(state_agi)),
         "difference": str(cents(abs(fed_agi - state_agi))),
-        "detail": f"Federal AGI ({fmt(fed_agi)}) vs MD 502 Line 1 ({fmt(state_agi)})"
+        "detail": f"Federal AGI ({fmt(fed_agi)}) vs GA 500 Line 8 ({fmt(state_agi)})"
+    }
+
+
+def check_schedule_e_match(fv):
+    """Check 11 (optional): Schedule 1 Line 5 = Schedule E Line 26.
+
+    Runs only when both values are provided. Rental income flows
+    Schedule E Line 26 -> Schedule 1 Line 5 -> 1040 Line 8.
+    (Source: schedule-e-guide.md, Totals)
+    """
+    if "schedule_e_line_26" not in fv and "schedule_1_line_5" not in fv:
+        return None
+    sch_e = d(fv.get("schedule_e_line_26"))
+    sch_1 = d(fv.get("schedule_1_line_5"))
+    status = compare(sch_e, sch_1)
+    return {
+        "check_name": "schedule_e_match",
+        "category": "Cross-Form Consistency",
+        "status": status,
+        "expected": str(cents(sch_e)),
+        "actual": str(cents(sch_1)),
+        "difference": str(cents(abs(sch_e - sch_1))),
+        "detail": f"Schedule E Line 26 ({fmt(sch_e)}) vs Schedule 1 Line 5 ({fmt(sch_1)})"
     }
 
 
@@ -408,6 +437,10 @@ def cross_check(data):
         check_fed_state_agi_match(fv, sv),
         check_tax_bracket(fv, filing_status),
     ]
+
+    sched_e_check = check_schedule_e_match(fv)
+    if sched_e_check is not None:
+        checks.append(sched_e_check)
 
     passed = sum(1 for c in checks if c["status"] == "pass")
     warnings = sum(1 for c in checks if c["status"] == "warning")

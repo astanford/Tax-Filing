@@ -14,12 +14,14 @@ state tax return using Claude Code. Built for tax year 2025.
 ## File Locations
 | What | Where |
 |------|-------|
-| Curated IRS/MD references | reference/curated/ |
+| Curated IRS/GA references | reference/curated/ |
 | Reference curation guide | reference/HOW-TO-CURATE.md |
 | Known pitfalls | docs/KNOWN-PITFALLS.md |
 | Example outputs | examples/ |
 | Your tax documents | my-tax-docs/ (gitignored) |
+| Prior-year returns (PDFs with PII) | my-tax-docs/prior-years/ (gitignored) |
 | Generated analysis | analysis/ (gitignored) |
+| Prior-year carryover data (no PII) | analysis/prior-year-carryovers-*.json (gitignored) — see docs/PRIOR-YEAR-DATA.md |
 
 ## Rules
 1. Every tax rule must cite a file in reference/curated/
