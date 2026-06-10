@@ -6,6 +6,8 @@
 >
 > This is "vibe coding" applied to something that actually matters.
 
+> **📋 Fork status:** See [docs/STATUS-AND-ROADMAP.md](docs/STATUS-AND-ROADMAP.md) for what's been done (Georgia conversion, Schedule E rentals, prior-year ingestion), what's next, and known limitations — **notably, K-1s / Schedule E Part II are not supported**.
+
 ---
 
 ## What This Is
