@@ -6,11 +6,9 @@ document,box_or_line,description,value,source_path
 "W-2 (Jane Doe - Acme Corp)",Box 5,Medicare wages and tips,85000.00,my-tax-docs/w2-acme-2025.pdf
 "W-2 (Jane Doe - Acme Corp)",Box 6,Medicare tax withheld,1232.50,my-tax-docs/w2-acme-2025.pdf
 "W-2 (Jane Doe - Acme Corp)",Box 12a,Code D - 401(k) elective deferrals,6000.00,my-tax-docs/w2-acme-2025.pdf
-"W-2 (Jane Doe - Acme Corp)",Box 15,State - MD,MD,my-tax-docs/w2-acme-2025.pdf
+"W-2 (Jane Doe - Acme Corp)",Box 15,State,GA,my-tax-docs/w2-acme-2025.pdf
 "W-2 (Jane Doe - Acme Corp)",Box 16,State wages,85000.00,my-tax-docs/w2-acme-2025.pdf
 "W-2 (Jane Doe - Acme Corp)",Box 17,State income tax,3850.00,my-tax-docs/w2-acme-2025.pdf
-"W-2 (Jane Doe - Acme Corp)",Box 18,Local wages,85000.00,my-tax-docs/w2-acme-2025.pdf
-"W-2 (Jane Doe - Acme Corp)",Box 19,Local income tax,1350.00,my-tax-docs/w2-acme-2025.pdf
 "1099-INT (First National Bank)",Box 1,Interest income,200.00,my-tax-docs/1099-int-first-national-2025.pdf
 "1099-DIV (Sample Investments)",Box 1a,Total ordinary dividends,350.00,my-tax-docs/1099-div-sample-investments-2025.pdf
 "1099-DIV (Sample Investments)",Box 1b,Qualified dividends,275.00,my-tax-docs/1099-div-sample-investments-2025.pdf

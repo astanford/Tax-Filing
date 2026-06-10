@@ -1,6 +1,6 @@
 ---
 name: tax-advisor
-description: "After filing, analyzes the completed return and recommends actions to reduce tax liability for the next year. Runs what-if scenarios showing the dollar impact of each recommendation on federal, Maryland state, and local taxes. Triggers on: 'what should I do differently next year', 'how to reduce my taxes', 'tax planning', 'what if I maxed my 401k', 'tax optimization', 'next year tax strategy', 'reduce my tax bill', 'tax savings opportunities', 'should I change my withholding', 'how much would I save'."
+description: "After filing, analyzes the completed return and recommends actions to reduce tax liability for the next year. Runs what-if scenarios showing the dollar impact of each recommendation on federal and Georgia state taxes. Triggers on: 'what should I do differently next year', 'how to reduce my taxes', 'tax planning', 'what if I maxed my 401k', 'tax optimization', 'next year tax strategy', 'reduce my tax bill', 'tax savings opportunities', 'should I change my withholding', 'how much would I save'."
 ---
 
 # tax-advisor
@@ -18,7 +18,7 @@ Every conversation starts here:
 3. If it does NOT exist:
    - Tell the user: "No extracted tax data found. Run `/tax-prep` first to extract your document values, then file your return with `/tax-cheatsheet` and `/tax-audit`, and come back here for planning."
    - Stop — do not proceed without the CSV
-4. If the user has already run `/tax-audit`, offer to reuse those filed return values as the baseline
+4. If the user has already run `/tax-audit`, offer to reuse those filed return values as the baseline. If `analysis/prior-year-carryovers-*.json` exists, also use it for year-over-year comparison and the estimated-tax safe-harbor reference (prior-year total tax — verify the 100%/110% safe-harbor rules on IRS.gov; not yet in a curated file)
 5. Otherwise, collect the baseline data from the user:
    - Filing status
    - Wages (primary and spouse, both W-2 Box 1 and Box 5 Medicare wages)
@@ -26,8 +26,8 @@ Every conversation starts here:
    - Schedule C net profit/loss
    - Deduction components (mortgage interest, state/local tax, real estate tax, charitable)
    - Retirement contributions already made (401k, IRA, HSA)
-   - County of residence
-   - US obligation interest (for MD subtractions)
+   - Number of dependents (for the GA $4,000/dependent exemption)
+   - US obligation interest (GA Schedule 1 subtraction)
    - QBI carryforward from current year (if any)
 6. Ask which scenarios to explore, or offer to run all scenarios
 
@@ -123,6 +123,7 @@ Collect these values from the user's filed return and extracted CSV:
 | `dividends_qualified` | 1099-DIV Box 1b sum | Qualified dividends (for reference) |
 | `capital_gain` | 1040 Line 7 | Net capital gain or loss |
 | `schedule_c_net` | Schedule C Line 31 | Net business profit or loss |
+| `schedule_e_net` | Schedule E Line 26 | Allowed rental income/(loss) after Form 8582 limits (from `schedule_e_calculator.py`); no SE tax applies |
 | `other_income` | 1040 Line 8 | Other income (Schedule 1) |
 | `adjustments` | Other adjustments | Other Schedule 1 adjustments |
 | `retirement_contributions_primary` | Current 401(k) | Primary current 401(k) contribution |
@@ -134,10 +135,9 @@ Collect these values from the user's filed return and extracted CSV:
 | `charitable` | Schedule A Line 12 | Charitable contributions |
 | `medical_expenses` | Schedule A Line 1 | Gross medical expenses |
 | `other_itemized` | Schedule A other | Other itemized deductions |
-| `county` | User input | Maryland county (e.g., "Montgomery") |
-| `us_obligation_interest` | 1099-INT Box 8 | U.S. obligation interest (MD subtraction) |
+| `us_obligation_interest` | 1099-INT Box 3 | U.S. obligation interest (GA Schedule 1 subtraction) |
 | `qbi_carryforward` | Form 8995 Line 16 | QBI loss carryforward from current year |
-| `num_exemptions` | User input | Number of MD exemptions (default: 2 MFJ) |
+| `num_dependents` | User input | Number of dependents (GA Line 7c — $4,000 each; default: 0) |
 
 ### scenario
 
@@ -165,7 +165,7 @@ Based on your 2025 filed return (filing status: [status], AGI: $[amount]).
 
 ### Plan for Next Year
 
-| # | Strategy | Current → Proposed | Federal Savings | State + Local Savings | Total Savings |
+| # | Strategy | Current → Proposed | Federal Savings | GA State Savings | Total Savings |
 |---|----------|-------------------|-----------------|----------------------|---------------|
 | 1 | Max 401(k) both | $0 → $47,000 | $X | $Y | $Z |
 | ... | ... | ... | ... | ... | ... |
@@ -203,7 +203,7 @@ If you implemented [list of recommended strategies]:
 ```
 
 **Important output rules:**
-- Always show both federal AND state/local impact — state savings are significant at MD rates
+- Always show both federal AND state impact — GA's flat 5.19% adds meaningful savings to every AGI-reducing strategy (no local income tax in Georgia)
 - When a scenario shows $0 savings, explain why (phase-out, not eligible, etc.)
 - When retirement/HSA limits are used, include the verification warning from the script's `notes` array
 - Round dollar amounts to whole dollars in the summary table; cents in detail sections
@@ -223,7 +223,7 @@ If you implemented [list of recommended strategies]:
 
 | Script | Purpose | Location |
 |--------|---------|----------|
-| `what_if.py` | Model tax scenarios, compute dollar savings for federal + MD state + local | `.claude/skills/tax-advisor/scripts/` |
+| `what_if.py` | Model tax scenarios, compute dollar savings for federal + GA state | `.claude/skills/tax-advisor/scripts/` |
 
 Also available from other skills (do not modify):
 

@@ -1,6 +1,6 @@
 ---
 name: tax-cheatsheet
-description: "When the user is working on a specific tax form, generates a line-by-line cheat sheet explaining what each line means, where values come from, which rules apply, and whether each line is relevant to their situation. Also helps organize business expenses for Schedule C. Triggers on: 'help me fill out [form name]', 'what goes on line X', 'cheat sheet for Schedule C', 'does this apply to me', 'explain this form', 'walk me through Form 1040', 'what is line 12a', 'help with Schedule A', 'how do I fill this out', or when user shares a screenshot of a form they're filling out."
+description: "When the user is working on a specific tax form, generates a line-by-line cheat sheet explaining what each line means, where values come from, which rules apply, and whether each line is relevant to their situation. Also helps organize business expenses for Schedule C and rental property income/expenses for Schedule E (including single-member LLC and short/mid/long-term rentals). Triggers on: 'help me fill out [form name]', 'what goes on line X', 'cheat sheet for Schedule C', 'help with my rentals', 'Schedule E for my LLC', 'does this apply to me', 'explain this form', 'walk me through Form 1040', 'what is line 12a', 'help with Schedule A', 'how do I fill this out', or when user shares a screenshot of a form they're filling out."
 ---
 
 # tax-cheatsheet
@@ -15,7 +15,7 @@ Every conversation starts here:
 2. If it exists:
    - Count distinct documents and total rows
    - Report: "I have your extracted tax data (N documents, M values). Which form would you like help with?"
-   - List the most common forms: Form 1040, Schedule A, Schedule B, Schedule C, Schedule D, Schedule 1, Schedule 2, Maryland Form 502
+   - List the most common forms: Form 1040, Schedule A, Schedule B, Schedule C, Schedule D, Schedule 1, Schedule 2, Georgia Form 500
 3. If it does NOT exist:
    - Tell the user: "No extracted tax data found. Run `/tax-prep` first to extract your document values, then come back here."
    - Stop — do not proceed without the CSV
@@ -36,13 +36,16 @@ Use this table to determine which curated reference files to read for each form,
 | Schedule B (Interest and Dividends) | `investment-income.md` | 1099-INT, 1099-DIV |
 | Schedule C (Business Income) | `schedule-c-guide.md` | 1099-K, 1099-NEC |
 | Schedule D / Form 8949 (Capital Gains) | `investment-income.md` | 1099-B, 1099-DIV |
-| Schedule 1 (Additional Income/Adjustments) | `1040-line-by-line.md`, `schedule-c-guide.md`, `student-loan-interest.md` | 1099-K, 1098-E |
+| Schedule E (Rental Real Estate) | `schedule-e-guide.md`, `rental-depreciation.md`, `passive-activity-losses.md` | 1099-MISC, Rental, 1098 |
+| Form 4562 (Depreciation) | `rental-depreciation.md` | Rental |
+| Form 8582 (Passive Activity Losses) | `passive-activity-losses.md` | Rental |
+| Schedule 1 (Additional Income/Adjustments) | `1040-line-by-line.md`, `schedule-c-guide.md`, `schedule-e-guide.md`, `student-loan-interest.md` | 1099-K, 1099-MISC, 1098-E |
 | Schedule 1-A (OBBBA Deductions) | `schedule-1a-deductions.md` | W-2 |
 | Schedule 2 (Additional Taxes) | `additional-medicare-tax.md`, `niit-form-8960.md`, `2025-tax-numbers.md` | W-2, 1099-INT, 1099-DIV, 1099-B |
 | Form 8959 (Additional Medicare Tax) | `additional-medicare-tax.md`, `2025-tax-numbers.md` | W-2 |
 | Form 8960 (NIIT) | `niit-form-8960.md`, `2025-tax-numbers.md` | 1099-INT, 1099-DIV, 1099-B, Schedule C result |
 | Form 8995 (QBI Deduction) | `self-employment-qbi.md` | Schedule C result |
-| Maryland Form 502 | `maryland-502-guide.md`, `2025-tax-numbers.md` | W-2, all |
+| Georgia Form 500 | `georgia-500-guide.md`, `2025-tax-numbers.md` | W-2, all |
 
 ## Cheat Sheet Generation Workflow
 
@@ -53,6 +56,8 @@ When the user asks about a form (by name, line number, or screenshot):
 2. **Load the CSV.** Read `analysis/tax-doc-summary.csv`. Use `form_line_lookup.py` to pull relevant values.
 
 3. **Consult the reference files.** Using the Supported Forms Table above, read the appropriate curated reference file(s) from `reference/curated/`.
+
+3a. **Check prior-year carryovers.** If `analysis/prior-year-carryovers-*.json` exists, pull the values relevant to this form: QBI carryforward (Form 8995 Line 16 → this year's Line 3/16), capital loss carryforward (Schedule D Lines 6/14), suspended passive losses and depreciation (Schedule E), overpayment applied (1040 Line 26 / GA 500 Line 26), and whether the user itemized last year (state refund taxability, Schedule 1 Line 1). Cite `docs/PRIOR-YEAR-DATA.md` and remind the user to verify against the actual prior return.
 
 4. **Generate the cheat sheet table.** For each line in the requested section, produce a row with these columns:
 
@@ -167,6 +172,46 @@ When the user asks about Schedule C or business-related forms, use this speciali
   > "Home office deduction cannot increase a net loss. If Schedule C shows a loss, the deduction is limited to $0." *(Source: schedule-c-guide.md, Home Office)*
 - Recommend skipping Form 8829 if net loss year
 
+## Schedule E / Rental Property Workflow
+
+When the user asks about Schedule E, rental properties, or their rental LLCs, use this specialized workflow:
+
+### Step 1 — Inventory Properties and Entities
+- Check CSV for `Rental (...)` and `1099-MISC (...)` documents
+- Check `analysis/prior-year-carryovers-*.json` (validated by `/tax-prep`) for each property's **suspended passive losses** (→ `prior_suspended_loss`) and **asset depreciation schedules** (basis, placed-in-service, prior accumulated depreciation → `schedule_e_calculator.py` inputs). See `docs/PRIOR-YEAR-DATA.md`.
+- For each property, confirm: address, owning entity, classification (short-term / mid-term / long-term by average rental period), days rented vs. personal use
+- **Single-member LLCs are disregarded** — each LLC's rentals go directly on the owner's Schedule E as if owned personally *(Source: schedule-e-guide.md, Single-Member LLCs)*
+
+### Step 2 — Classify Each Property (this drives everything)
+- **Substantial services provided** (regular cleaning, linen, maid service — hotel-like)? → **Schedule C, not E**, and SE tax applies *(Source: schedule-e-guide.md, Schedule C Boundary)*
+- **Average rental period ≤ 7 days** (typical STR)? → Not a §469 rental activity: NO $25K allowance; passive unless material participation *(Source: passive-activity-losses.md, Exceptions)*
+- **Average ≤ 30 days + significant personal services** (typical furnished MTR)? → Same exception applies *(Source: passive-activity-losses.md, Exceptions)*
+- Otherwise → ordinary rental activity, $25K allowance possible with active participation
+- Check vacation-home limits: personal use > greater of 14 days / 10% of rental days *(Source: schedule-e-guide.md, Personal Use)*; rented < 15 days → income not reported at all
+
+### Step 3 — Reconcile Income
+- Sum management-statement gross rents; reconcile against 1099-MISC Box 1 / platform 1099-K payouts
+- All rents received go on Line 3 regardless of information returns
+
+### Step 4 — Categorize Expenses (Lines 5–19)
+- Repairs (Line 14) vs. improvements (capitalize → Line 18 depreciation) — triage every large item *(Source: schedule-e-guide.md, Repairs vs Improvements)*
+- Mortgage interest Line 12 (from 1098), property taxes Line 16 (county tax bill), management fees Line 11, cleaning Line 7
+
+### Step 5 — Depreciation (Line 18)
+- Building: 27.5-yr SL mid-month (residential); **39-yr if transient/hotel-like use** — check STR properties *(Source: rental-depreciation.md)*
+- Land is never depreciated — split basis using county assessment ratio
+- Run `schedule_e_calculator.py` with basis, placed-in-service date, recovery period
+- **Georgia:** bonus depreciation claimed federally must be added back on GA Schedule 1 *(Source: georgia-500-guide.md, Key Structural Facts)*
+
+### Step 6 — Compute and Apply Loss Limits
+- Run `schedule_e_calculator.py` with all properties; it computes per-property Line 21, the simplified Form 8582 ($25K allowance with $100K–$150K MAGI phase-out), suspended carryforwards, and the GA addback
+- Flag downstream forms: Form 4562 (first-year assets), Form 8582 (losses), Schedule 1 Line 5
+
+### Step 7 — Downstream Flags
+- Net rental income → NIIT exposure (Form 8960) *(Source: niit-form-8960.md)*
+- No SE tax on Schedule E rentals *(Source: schedule-e-guide.md)*
+- GA: flows through federal AGI to Form 500 Line 8 — no separate GA rental schedule *(Source: georgia-500-guide.md, Line 8)*
+
 ## "Does This Apply to Me?" Workflow
 
 When the user asks whether a provision, credit, or deduction applies:
@@ -232,6 +277,7 @@ Scripts accept a single CLI argument (JSON string) and print a JSON object to st
 | `form_line_lookup.py` | Look up and sum values from the tax-doc-summary CSV by document type and box |
 | `standard_vs_itemized.py` | Compare standard deduction vs. itemized, accounting for SALT cap and phase-out |
 | `schedule_c_calculator.py` | Compute Schedule C lines: COGS, expenses, net profit/loss, SE tax flag, QBI |
+| `schedule_e_calculator.py` | Compute Schedule E per-property lines, depreciation, passive-loss limits ($25K allowance), GA bonus addback |
 | `salt_cap_calculator.py` | Compute effective SALT cap with MAGI phase-out |
 
 ## Related Skills

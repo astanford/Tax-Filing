@@ -9,7 +9,10 @@ my tax files/
 analysis/
 
 # Raw reference PDFs (large, freely available from IRS.gov)
-reference/Raw/
+reference/Raw/*
+# Exception: official Georgia sources cited by reference/curated/ files
+!reference/Raw/2025-it511-booklet.pdf
+!reference/Raw/2025-ga-form-500.pdf
 
 # Python
 __pycache__/

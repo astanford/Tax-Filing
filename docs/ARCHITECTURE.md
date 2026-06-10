@@ -45,6 +45,7 @@ User provides tax documents (PDFs)
     ├── Queries CSV via form_line_lookup.py
     ├── Runs standard_vs_itemized.py (deduction comparison)
     ├── Runs schedule_c_calculator.py (business income)
+    ├── Runs schedule_e_calculator.py (rental real estate)
     ├── Runs salt_cap_calculator.py (SALT deduction)
     ├── Cites reference/curated/ for every rule
     └── Produces analysis/cheatsheet-{form}.md
@@ -57,14 +58,14 @@ User provides tax documents (PDFs)
     ├── Collects user's completed form values
     ├── Runs cross_check.py (10 consistency checks)
     ├── Runs completeness_check.py (document coverage)
-    ├── Checks 10 known pitfalls (docs/KNOWN-PITFALLS.md)
+    ├── Checks 14 known pitfalls (docs/KNOWN-PITFALLS.md)
     └── Issues verdict: READY TO FILE / REVIEW THESE ITEMS / STOP
          |
          v
     /tax-advisor
     ├── Uses baseline from completed return
     ├── Runs what_if.py (11 scenarios)
-    └── Reports federal + state + local dollar impact
+    └── Reports federal + GA state dollar impact
 ```
 
 ## Script Dependency Map
@@ -72,9 +73,11 @@ User provides tax documents (PDFs)
 | Skill | Scripts Called | Purpose |
 |-------|--------------|---------|
 | `/tax-prep` | `validate_extraction.py` | Validate CSV for anomalies |
+| `/tax-prep` | `validate_prior_year.py` | Validate prior-year carryover JSON (schema + PII scan) |
 | `/tax-cheatsheet` | `form_line_lookup.py` | Query CSV by document/box |
 | `/tax-cheatsheet` | `standard_vs_itemized.py` | Deduction comparison |
 | `/tax-cheatsheet` | `schedule_c_calculator.py` | Schedule C computation |
+| `/tax-cheatsheet` | `schedule_e_calculator.py` | Schedule E rentals: depreciation, passive-loss limits |
 | `/tax-cheatsheet` | `salt_cap_calculator.py` | SALT cap with phase-out |
 | `/tax-audit` | `cross_check.py` | 10 cross-checks |
 | `/tax-audit` | `completeness_check.py` | Document coverage |
@@ -88,7 +91,10 @@ User provides tax documents (PDFs)
 | `2025-tax-numbers.md` | All skills |
 | `additional-medicare-tax.md` | /tax-cheatsheet, /tax-audit |
 | `investment-income.md` | /tax-cheatsheet |
-| `maryland-502-guide.md` | /tax-cheatsheet, /tax-audit, /tax-advisor |
+| `georgia-500-guide.md` | /tax-cheatsheet, /tax-audit, /tax-advisor |
+| `schedule-e-guide.md` | /tax-cheatsheet, /tax-audit |
+| `rental-depreciation.md` | /tax-cheatsheet, /tax-audit |
+| `passive-activity-losses.md` | /tax-cheatsheet, /tax-audit |
 | `mortgage-interest.md` | /tax-cheatsheet, /tax-audit |
 | `niit-form-8960.md` | /tax-cheatsheet |
 | `retirement-hsa-limits.md` | /tax-advisor |

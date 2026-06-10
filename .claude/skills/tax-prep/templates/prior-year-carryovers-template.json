@@ -1,0 +1,65 @@
+{
+  "_comment": "Template for analysis/prior-year-carryovers-<year>.json. All values fictional. Amounts are strings (Decimal-parseable). Use null or omit fields that don't apply. NO PII: no SSNs, no bank/routing numbers, no dates of birth, no full names. Property labels (street + LLC) are allowed and must match the labels used in analysis/tax-doc-summary.csv.",
+  "tax_year": 2024,
+  "source": "hermes-agent",
+  "filing_status": "MFJ",
+  "federal": {
+    "agi_line_11": "185000.00",
+    "taxable_income_line_15": "152000.00",
+    "total_tax_line_24": "24500.00",
+    "withholding_line_25": "21000.00",
+    "estimated_payments_line_26": "4000.00",
+    "refund_line_34": "500.00",
+    "balance_due_line_37": "0.00",
+    "overpayment_applied_to_next_year_line_36": "0.00",
+    "itemized": true,
+    "itemized_total_schedule_a": "33500.00",
+    "salt_deducted_schedule_a_line_5e": "10000.00",
+    "qbi_carryforward_form_8995_line_16": "0.00",
+    "capital_loss_carryforward": "1200.00",
+    "nol_carryforward": "0.00",
+    "charitable_carryforward": "0.00",
+    "ira_basis_form_8606": "0.00"
+  },
+  "georgia": {
+    "ga_taxable_income_line_15c": "148000.00",
+    "ga_tax_line_16": "7977.00",
+    "ga_withholding_line_24": "8200.00",
+    "ga_estimated_payments_line_26": "0.00",
+    "ga_overpayment_applied_to_next_year_line_31": "0.00",
+    "ga_refund_line_46": "223.00",
+    "ga_nol_carryforward": "0.00",
+    "ga_depreciation_difference_tracking": "0.00"
+  },
+  "state_refund_received_during_current_year": "223.00",
+  "rentals": [
+    {
+      "property_label": "Rental (456 Oak Ave - Oak LLC)",
+      "classification": "short_term",
+      "suspended_passive_loss_form_8582": "3400.00",
+      "assets": [
+        {
+          "description": "Building",
+          "placed_in_service": "2022-05",
+          "cost_basis": "275000.00",
+          "land_value_excluded": "60000.00",
+          "method_recovery": "SL/27.5 MM",
+          "prior_accumulated_depreciation": "26136.00",
+          "federal_bonus_claimed": "0.00"
+        },
+        {
+          "description": "Appliance package",
+          "placed_in_service": "2024-06",
+          "cost_basis": "8000.00",
+          "land_value_excluded": "0.00",
+          "method_recovery": "200DB/5",
+          "prior_accumulated_depreciation": "1600.00",
+          "federal_bonus_claimed": "4800.00"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Free-text reminders extracted from the return, e.g. 'Itemized in 2024, so 2025 GA refund of $223 may be federally taxable.' No PII."
+  ]
+}

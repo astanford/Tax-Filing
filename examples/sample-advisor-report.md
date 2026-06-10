@@ -8,11 +8,11 @@ Based on your 2025 filed return. Filing status: **MFJ**. AGI: **$85,550**.
 
 ## Scenario Summary
 
-| # | Strategy | Federal Savings | State Savings | Local Savings | Total Savings |
-|---|----------|-----------------|---------------|---------------|---------------|
-| 1 | Max 401(k) — primary | $2,100 | $963 | $560 | **$3,623** |
-| 2 | Max HSA (family) | $1,026 | $471 | $274 | **$1,771** |
-| 3 | Increase charitable ($5,000) | $0 | $0 | $0 | **$0** |
+| # | Strategy | Federal Savings | GA State Savings | Total Savings |
+|---|----------|-----------------|---------------|---------------|
+| 1 | Max 401(k) — primary | $2,100 | $908 | **$3,008** |
+| 2 | Max HSA (family) | $1,026 | $444 | **$1,470** |
+| 3 | Increase charitable ($5,000) | $0 | $0 | **$0** |
 
 ## Scenario Details
 
@@ -25,9 +25,8 @@ Based on your 2025 filed return. Filing status: **MFJ**. AGI: **$85,550**.
 - Current federal tax: $6,197
 - Modified federal tax: $4,097
 - **Federal savings: $2,100** (12% marginal rate)
-- **MD state savings: $963** (5.50% rate)
-- **Local savings: $560** (3.20% Montgomery County rate)
-- **Total annual savings: $3,623**
+- **GA state savings: $908** (5.19% flat rate)
+- **Total annual savings: $3,008** (Georgia has no local income tax)
 
 **Notes:**
 - This reduces AGI from $85,550 to $68,050
@@ -45,13 +44,12 @@ Based on your 2025 filed return. Filing status: **MFJ**. AGI: **$85,550**.
 - Current federal tax: $6,197
 - Modified federal tax: $5,171
 - **Federal savings: $1,026** (12% marginal rate)
-- **MD state savings: $471** (5.50% rate)
-- **Local savings: $274** (3.20% rate)
-- **Total annual savings: $1,771**
+- **GA state savings: $444** (5.19% flat rate)
+- **Total annual savings: $1,470** (Georgia has no local income tax)
 
 **Notes:**
 - Requires enrollment in a High Deductible Health Plan (HDHP)
-- HSA contributions are deductible for federal AND Maryland state taxes
+- HSA contributions are deductible for federal AND Georgia state taxes
 - Funds grow tax-free and can be used for qualified medical expenses
 - *(Source: retirement-hsa-limits.md, HSA Limits)*
 - Verify HSA eligibility requirements at irs.gov
@@ -73,10 +71,10 @@ Based on your 2025 filed return. Filing status: **MFJ**. AGI: **$85,550**.
 
 If you implemented strategies **1 + 2** (max 401(k) + max HSA):
 
-- Current total tax: **$11,147** (federal $6,197 + MD $4,105 + local $2,845)
-- Projected total tax: **$5,727**
-- **Total annual savings: $5,420**
-- Effective rate: 13.0% → 7.5%
+- Current total tax: **$9,391** (federal $6,197 + GA $3,194)
+- Projected total tax: **$4,913** (federal $3,071 + GA $1,842)
+- **Total annual savings: $4,478**
+- Effective rate: 11.0% → 5.7%
 
 *Note: Combined scenario run as a single calculation — not a simple sum of individual scenarios, because bracket interactions matter.*
 
