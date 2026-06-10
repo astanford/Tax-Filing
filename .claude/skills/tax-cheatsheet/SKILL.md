@@ -195,7 +195,7 @@ When the user asks about Schedule E, rental properties, or their rental LLCs, us
 
 ### Step 4 — Categorize Expenses (Lines 5–19)
 - Repairs (Line 14) vs. improvements (capitalize → Line 18 depreciation) — triage every large item *(Source: schedule-e-guide.md, Repairs vs Improvements)*
-- Mortgage interest Line 12 (from 1098), property taxes Line 16 (DeKalb County bill), management fees Line 11, cleaning Line 7
+- Mortgage interest Line 12 (from 1098), property taxes Line 16 (county tax bill), management fees Line 11, cleaning Line 7
 
 ### Step 5 — Depreciation (Line 18)
 - Building: 27.5-yr SL mid-month (residential); **39-yr if transient/hotel-like use** — check STR properties *(Source: rental-depreciation.md)*

@@ -63,13 +63,16 @@ def d(val):
 
 
 def walk(node, path="$"):
-    """Yield (path, key, value) for every key/value in nested JSON."""
+    """Yield (path, key, value) for every entry in nested JSON —
+    including list elements (a string inside an array must be scanned
+    the same as a dict value)."""
     if isinstance(node, dict):
         for k, v in node.items():
-            yield from walk(v, f"{path}.{k}")
             yield (f"{path}.{k}", k, v)
+            yield from walk(v, f"{path}.{k}")
     elif isinstance(node, list):
         for i, v in enumerate(node):
+            yield (f"{path}[{i}]", "", v)
             yield from walk(v, f"{path}[{i}]")
 
 
@@ -82,6 +85,11 @@ def pii_scan(data):
             if frag in key_lower:
                 findings.append(f"Blocked key name at {path} (contains '{frag}')")
                 break
+        # JSON numbers: amounts must be strings per the schema, so any
+        # 9+ digit bare integer is account/routing-like, not money
+        if isinstance(value, int) and not isinstance(value, bool):
+            if len(str(abs(value))) >= 9:
+                findings.append(f"Account/routing-like bare integer in value at {path}")
         if isinstance(value, str):
             if SSN_DASHED.search(value):
                 findings.append(f"SSN-like pattern (xxx-xx-xxxx) in value at {path}")

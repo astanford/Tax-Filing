@@ -65,10 +65,15 @@ def fmt(val):
 # ---------------------------------------------------------------------------
 
 # Special $25,000 allowance and MAGI phase-out
+# MFS living apart all year: $12,500 with a $50K-$75K phase-out;
+# MFS living together: $0.
 # (Source: passive-activity-losses.md, Special $25,000 Allowance)
 ALLOWANCE_MAX = Decimal("25000")
 ALLOWANCE_PHASEOUT_START = Decimal("100000")
 ALLOWANCE_PHASEOUT_END = Decimal("150000")
+ALLOWANCE_MAX_MFS_APART = Decimal("12500")
+ALLOWANCE_PHASEOUT_START_MFS_APART = Decimal("50000")
+ALLOWANCE_PHASEOUT_END_MFS_APART = Decimal("75000")
 ALLOWANCE_PHASEOUT_RATE = Decimal("0.50")
 
 # Schedule E Part I expense lines
@@ -194,23 +199,34 @@ def classify_469(prop, notes):
     return "rental_activity"
 
 
-def compute_allowance(magi, filing_status, active_participation, notes):
+def compute_allowance(magi, filing_status, active_participation, mfs_lived_apart_all_year, notes):
     """$25,000 special allowance with 50% phase-out from $100K to $150K MAGI.
+    MFS living apart all year: $12,500 / $50K-$75K. MFS living together: $0.
 
     (Source: passive-activity-losses.md, Special $25,000 Allowance)
     """
     if not active_participation:
         notes.append("No active participation — $25,000 special allowance unavailable. (Source: passive-activity-losses.md)")
         return Decimal("0")
+
+    max_allowance = ALLOWANCE_MAX
+    start = ALLOWANCE_PHASEOUT_START
+    end = ALLOWANCE_PHASEOUT_END
     if filing_status == "MFS":
-        notes.append("MFS: special allowance is $0 unless you lived apart from your spouse all year ($12,500/$50K-$75K phase-out) — verify in passive-activity-losses.md.")
+        if not mfs_lived_apart_all_year:
+            notes.append("MFS living with spouse at any point in the year: special allowance is $0. (Source: passive-activity-losses.md, Special $25,000 Allowance)")
+            return Decimal("0")
+        max_allowance = ALLOWANCE_MAX_MFS_APART
+        start = ALLOWANCE_PHASEOUT_START_MFS_APART
+        end = ALLOWANCE_PHASEOUT_END_MFS_APART
+        notes.append("MFS living apart all year: $12,500 allowance with $50K-$75K MAGI phase-out applied. (Source: passive-activity-losses.md)")
+
+    if magi <= start:
+        return max_allowance
+    if magi >= end:
+        notes.append(f"MAGI {fmt(magi)} >= {fmt(end)} — special allowance fully phased out; rental losses suspended on Form 8582.")
         return Decimal("0")
-    if magi <= ALLOWANCE_PHASEOUT_START:
-        return ALLOWANCE_MAX
-    if magi >= ALLOWANCE_PHASEOUT_END:
-        notes.append(f"MAGI {fmt(magi)} >= {fmt(ALLOWANCE_PHASEOUT_END)} — special allowance fully phased out; rental losses suspended on Form 8582.")
-        return Decimal("0")
-    reduced = ALLOWANCE_MAX - ALLOWANCE_PHASEOUT_RATE * (magi - ALLOWANCE_PHASEOUT_START)
+    reduced = max_allowance - ALLOWANCE_PHASEOUT_RATE * (magi - start)
     return cents(max(Decimal("0"), reduced))
 
 
@@ -223,6 +239,7 @@ def schedule_e(data):
     magi = d(data.get("magi"))
     filing_status = data.get("filing_status", "MFJ")
     active_participation = bool(data.get("active_participation", True))
+    mfs_lived_apart_all_year = bool(data.get("mfs_lived_apart_all_year", False))
     prior_suspended = d(data.get("prior_suspended_loss"))
     properties = data.get("properties", [])
 
@@ -319,7 +336,7 @@ def schedule_e(data):
 
     # Allowance applies to the rental-activity share of the remaining loss
     rental_share_remaining = min(remaining_loss, rental_losses + prior_suspended)
-    allowance = compute_allowance(magi, filing_status, active_participation, notes)
+    allowance = compute_allowance(magi, filing_status, active_participation, mfs_lived_apart_all_year, notes)
     allowed_by_allowance = min(rental_share_remaining, allowance)
 
     suspended = remaining_loss - allowed_by_allowance

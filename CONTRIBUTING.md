@@ -20,7 +20,7 @@ In rough order of "easiest to land" to "needs discussion first":
 - **Bug fixes in existing Python scripts** — open a PR with a short before/after example showing the bad output and the corrected output.
 - **New curated reference files** (e.g. another state, a new form, a new deduction) — open an issue first so we can confirm scope and citation sources.
 - **New skills** — open an issue first. New skills must follow the conventions below and fit the existing pipeline.
-- **Tax-year updates (2026 and beyond)** — coordinate via issue so thresholds stay consistent across all 13 curated files.
+- **Tax-year updates (2026 and beyond)** — coordinate via issue so thresholds stay consistent across all 16 curated files.
 
 ## What We're NOT Looking For
 

@@ -86,7 +86,7 @@ schema-shape checks for the rentals array. Verdict: `accepted` or
 ## How the Data Is Used Downstream
 
 - **/tax-prep** — after extraction, reports which carryovers were found
-- **/tax-cheatsheet** — pulls `rentals[].suspended_passive_loss` and
+- **/tax-cheatsheet** — pulls `rentals[].suspended_passive_loss_form_8582` and
   `rentals[].assets[]` into `schedule_e_calculator.py`; QBI carryforward
   into Form 8995 guidance; capital loss carryforward into Schedule D
 - **/tax-audit** — verifies carryovers were applied (QBI, capital loss,
