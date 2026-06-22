@@ -75,3 +75,40 @@ Field-name/line audit vs `docs/PRIOR-YEAR-DATA.md` and curated refs:
 `withholding_line_25` has a cosmetic imprecision (should strictly be `_line_25d`) but no
 substantive mismatch. `salt_deducted_schedule_a_line_5e` cannot be verified from the four
 cited refs; flag for audit against `salt-deduction-2025.md`.
+
+## Extraction prompt — `hermes-extraction-request.md`
+
+**Verdict:** GO
+
+Field-by-field source map vs schema + curated refs: all 33 fields in the prompt exist in
+`prior-year-carryovers-template.json` with identical keys. All line-number claims verified
+against curated refs — `salt_deducted_schedule_a_line_5e` confirmed against
+`reference/curated/salt-deduction-2025.md` (present in curated; gap noted in Task 2 is
+resolved). `ira_basis_form_8606` has no dedicated curated guide but the key encodes the source
+form unambiguously. Redaction rules vs firewall coverage: the prompt's Rule 1 covers every PII
+category blocked by `BLOCKED_KEY_FRAGMENTS` and the SSN/LONG_DIGIT_RUN value patterns, with one
+defense-in-depth gap: `BLOCKED_KEY_FRAGMENTS` omits `name`/`taxpayer`/`dependent` fragments.
+The schema contains no name-bearing keys, so a schema-compliant extraction cannot leak names;
+a non-compliant extraction would pass the validator unchallenged. Low risk; recommend adding
+`"name"` to `BLOCKED_KEY_FRAGMENTS` as a hardening step in a later task.
+
+## Downstream wiring — skills + schedule_e_calculator.py
+
+**Verdict:** GO
+
+Keys consumed by the skills and confirmed present in the schema: `federal.capital_loss_carryforward`
+(consumed by tax-cheatsheet/SKILL.md and tax-audit/SKILL.md at concept level), `federal.qbi_carryforward_form_8995_line_16`
+(consumed by tax-cheatsheet/SKILL.md and tax-audit/SKILL.md; mapped implicitly to `what_if.py`
+baseline param `qbi_carryforward` — no SKILL.md sentence names both the JSON key and the script
+param together), `rentals[].suspended_passive_loss_form_8582` (consumed with explicit `→ prior_suspended_loss`
+mapping in tax-cheatsheet/SKILL.md and tax-audit/SKILL.md), `federal.overpayment_applied_to_next_year_line_36`
+and `georgia.ga_overpayment_applied_to_next_year_line_31` (consumed by tax-audit/SKILL.md),
+`state_refund_received_during_current_year` (consumed by tax-cheatsheet/SKILL.md and tax-audit/SKILL.md).
+Orphans (consumed but not produced): none found — every schema key that appears in a script param
+or SKILL.md instruction maps to a key that exists in the schema. Produced but not yet consumed:
+`federal.nol_carryforward`, `federal.charitable_carryforward`, `federal.ira_basis_form_8606`,
+`georgia.ga_nol_carryforward`, `georgia.ga_depreciation_difference_tracking` — stored for
+future skill use; expected at Phase 0. `rentals[].assets[].prior_accumulated_depreciation` is
+referenced in tax-cheatsheet/SKILL.md as a "schedule_e_calculator.py input" but the script
+does not have a param by that name — it is stored for audit/recapture reference only; SKILL.md
+wording is loose but not broken.
