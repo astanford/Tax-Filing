@@ -47,9 +47,11 @@ The home-directory global instructions apply, with these repo-specific clarifica
   "prefer repo-analyst" mandate here.
 - **"Tests" means the calculators + cross-checks.** This repo has no separate
   unit-test suite. The correctness surface is the Python scripts (e.g.
-  schedule_e_calculator.py, cross_check.py, completeness_check.py) validated
-  against the source PDFs in reference/Raw/. Review and "missing tests" guidance
-  maps to these.
+  .claude/skills/tax-cheatsheet/scripts/schedule_e_calculator.py,
+  .claude/skills/tax-audit/scripts/cross_check.py, and
+  .claude/skills/tax-audit/scripts/completeness_check.py) validated against the
+  source PDFs in reference/Raw/. Review and "missing tests" guidance maps to
+  these.
 - **Web research feeds curated references — it does not replace them.** Looking up
   IRS/GA source material is allowed, but a tax rule becomes usable only by going
   through reference/HOW-TO-CURATE.md and citing a file in reference/curated/
