@@ -170,6 +170,14 @@ two flowing-together pieces:
    (Part II), plus the basis → at-risk → passive limitation ordering
    (§704(d) → §465 → §469) and QBI from passthroughs.
 
+That follow-on follows the same **validate-then-extend** principle used
+here: it opens with a Phase-0-style validation of the *existing*,
+never-independently-verified Schedule E Part I work (the rental references +
+`schedule_e_calculator.py`, all Fable-authored), gated GO/FIX/NO-GO, and
+only then builds Part II / K-1 on the verified base. Schedule E (rentals) is
+central to this filer's return, so hardening Part I is a prerequisite, not
+an afterthought.
+
 This ingestion subsystem is built to *feed* that follow-on: the carryover
 schema is made passthrough-aware now so the follow-on consumes it without a
 schema re-open.
