@@ -16,6 +16,11 @@ bare 9+ digit account-like integers, long digit runs, every blocked key
 fragment, and array-nested PII are all rejected; legitimate money strings
 are not false-flagged.
 
+**Known limitation:** `BLOCKED_KEY_FRAGMENTS` guards JSON *keys*, not free-text
+*values* — a name typed into a `notes` free-text string is not caught by the
+firewall. Redaction-at-source (the extraction prompt's Rule 1) remains the
+primary control for that case.
+
 ## Carryover schema — `prior-year-carryovers-template.json` + `schema_check`
 
 **Verdict:** GO
@@ -42,7 +47,9 @@ Field-name/line audit vs `docs/PRIOR-YEAR-DATA.md` and curated refs:
 - `salt_deducted_schedule_a_line_5e` — Schedule A Line 5e. NOT VERIFIABLE from the four cited
   refs (1040-line-by-line.md covers only Form 1040 + Schedule 1/2; Schedule A line enumeration
   is in salt-deduction-2025.md which is outside scope here). No mismatch found; check against
-  `reference/curated/salt-deduction-2025.md` when auditing Schedule A fields.
+  `reference/curated/salt-deduction-2025.md` when auditing Schedule A fields — later resolved
+  in the Extraction-prompt audit against `reference/curated/salt-deduction-2025.md` (see
+  Extraction prompt section below).
 - `itemized`, `itemized_total_schedule_a`, `capital_loss_carryforward`, `nol_carryforward`,
   `charitable_carryforward`, `ira_basis_form_8606` — no form-line numbers embedded in names;
   pass as description-only fields. All carryover types confirmed as valid from

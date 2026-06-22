@@ -60,7 +60,7 @@ pytest==8.3.4
 
 - [ ] **Step 2: Install pytest**
 
-Run: `python -m pip install -r requirements-dev.txt`
+Run: `python3 -m pip install -r requirements-dev.txt`
 Expected: pytest installs (or "Requirement already satisfied").
 
 - [ ] **Step 3: Create the test harness so tests can import the validator**
@@ -156,7 +156,7 @@ def test_validate_rejects_file_with_pii(tmp_path):
 
 - [ ] **Step 5: Run the tests — observe results**
 
-Run: `python -m pytest tests/test_pii_firewall.py -v`
+Run: `python3 -m pytest tests/test_pii_firewall.py -v`
 Expected: All PASS → PII firewall is **GO**. Any FAIL → a real gap in `validate_prior_year.py` → record as **FIX** and proceed to Step 6. (Based on reading the validator, these are expected to pass.)
 
 - [ ] **Step 6: If any test failed, fix the validator**
@@ -291,7 +291,7 @@ def test_missing_georgia_section_warns_not_errors():
 
 - [ ] **Step 2: Run the tests — observe results**
 
-Run: `python -m pytest tests/test_schema_check.py -v`
+Run: `python3 -m pytest tests/test_schema_check.py -v`
 Expected: All PASS → schema validator is **GO**. Any FAIL → **FIX** (fix `schema_check`, re-run green).
 
 - [ ] **Step 3: Audit schema field names against the carryover map**
@@ -487,7 +487,7 @@ def test_passthrough_entity_label_is_not_pii():
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `python -m pytest tests/test_passthrough.py -v`
+Run: `python3 -m pytest tests/test_passthrough.py -v`
 Expected: FAIL — `passthrough` is not yet validated and `summary` lacks `passthrough_entities`.
 
 - [ ] **Step 3: Add the passthrough constant**
@@ -538,9 +538,9 @@ with:
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `python -m pytest tests/test_passthrough.py -v`
+Run: `python3 -m pytest tests/test_passthrough.py -v`
 Expected: PASS. Then run the whole suite to confirm no regressions:
-Run: `python -m pytest tests/ -v`
+Run: `python3 -m pytest tests/ -v`
 Expected: all PASS.
 
 - [ ] **Step 7: Add the fabricated passthrough example to the template**
@@ -583,7 +583,7 @@ reference does not yet exist — verify on IRS.gov (Rule 2).*
 
 - [ ] **Step 9: Run the validator CLI against the updated template as a smoke test**
 
-Run: `python .claude/skills/tax-prep/scripts/validate_prior_year.py '{"json_path": ".claude/skills/tax-prep/templates/prior-year-carryovers-template.json"}'`
+Run: `python3 .claude/skills/tax-prep/scripts/validate_prior_year.py '{"json_path": ".claude/skills/tax-prep/templates/prior-year-carryovers-template.json"}'`
 Expected: JSON output with `"verdict": "accepted"` and `summary.passthrough_entities` = 1. (The template has no PII and is schema-valid.)
 
 - [ ] **Step 10: Record the verdict in the findings doc**
@@ -680,7 +680,7 @@ def test_full_return_validates_clean(tmp_path):
 
 - [ ] **Step 2: Run the full test suite**
 
-Run: `python -m pytest tests/ -v`
+Run: `python3 -m pytest tests/ -v`
 Expected: all tests PASS (PII, schema, passthrough, round-trip).
 
 - [ ] **Step 3: Add the summary verdict table to the findings doc**
@@ -700,7 +700,7 @@ Append to `docs/PATH-B-VALIDATION.md`:
 
 **Gate decision:** <PROCEED to Phase 1 / fixes required>.
 
-Test coverage: `tests/` (run `python -m pytest tests/`). All fixtures
+Test coverage: `tests/` (run `python3 -m pytest tests/`). All fixtures
 fabricated per Rule 4.
 ```
 
