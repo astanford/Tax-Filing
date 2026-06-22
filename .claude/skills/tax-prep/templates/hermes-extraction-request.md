@@ -78,6 +78,18 @@ The state refund actually received (matches what a 1099-G would show).
   - `prior_accumulated_depreciation` — through the END of this return's year
   - `federal_bonus_claimed` — bonus depreciation taken on this asset (any year)
 
+### `passthrough` — one entry per K-1 (Schedule E Part II)
+- `entity_label` — entity name + type only, e.g. `"Partnership (Acme Partners LP)"`; no EIN, no PII
+- `entity_type` — `"partnership" | "s_corp" | "trust"`
+- `is_ptp` — true if a publicly traded partnership
+- `basis_carryforward_704d_1366d` — remaining outside basis carried forward (§704(d) partnership / §1366(d) S-corp)
+- `at_risk_carryforward_465` — suspended at-risk amount (Form 6198)
+- `suspended_passive_loss_form_8582` — this entity's unallowed passive loss (Form 8582 worksheets)
+- `qbi_passthrough_form_8995` — QBI from this entity (Form 8995/8995-A)
+
+*Source K-1 line meanings vary by form (1065 vs 1120-S vs 1041); a curated
+reference does not yet exist — verify on IRS.gov (Rule 2).*
+
 ### `notes`
 Array of short free-text strings for anything material that doesn't fit
 the schema (e.g., "Form 8582 shows $0 allowed due to MAGI"). No PII.

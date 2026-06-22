@@ -112,3 +112,24 @@ future skill use; expected at Phase 0. `rentals[].assets[].prior_accumulated_dep
 referenced in tax-cheatsheet/SKILL.md as a "schedule_e_calculator.py input" but the script
 does not have a param by that name — it is stored for audit/recapture reference only; SKILL.md
 wording is loose but not broken.
+
+## Passthrough/K-1 carryover extension
+
+**Verdict:** ADDED
+
+Schema, validator, template, and extraction prompt extended with a
+`passthrough` array (basis §704(d)/§1366(d), at-risk §465, suspended passive,
+PTP flag, passthrough QBI). Covered by `tests/test_passthrough.py`. This is
+the *ingestion* side only; current-year computation is the follow-on design.
+K-1 line meanings flagged for IRS.gov verification pending a curated ref.
+
+## PII firewall — name-fragment hardening (from Task 3 audit)
+
+**Verdict:** FIX
+
+Added `"name"`, `"taxpayer"`, `"spouse"`, `"dependent"` to `BLOCKED_KEY_FRAGMENTS`
+in `validate_prior_year.py`. The Task 3 audit noted that the redaction rules
+explicitly forbid taxpayer/spouse/dependent names but the firewall had no key-fragment
+guard for them — a defense-in-depth gap. The schema uses `*_label` (not `*_name`)
+throughout, so no legitimate key collides with these fragments. Full suite (25 tests)
+confirmed no false positives after adding them.

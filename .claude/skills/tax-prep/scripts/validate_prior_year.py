@@ -37,6 +37,7 @@ BLOCKED_KEY_FRAGMENTS = [
     "ssn", "social_security", "socialsecurity", "routing", "account_number",
     "accountnumber", "bank", "dob", "birth", "signature", "phone", "email",
     "itin", "ein",
+    "name", "taxpayer", "spouse", "dependent",
 ]
 
 # Value patterns that indicate PII leaked into the data
@@ -110,6 +111,7 @@ def pii_scan(data):
 REQUIRED_TOP_LEVEL = ["tax_year", "filing_status", "federal"]
 VALID_FILING_STATUS = {"MFJ", "Single", "MFS", "HoH", "QSS"}
 VALID_CLASSIFICATIONS = {"long_term", "mid_term", "short_term"}
+VALID_ENTITY_TYPES = {"partnership", "s_corp", "trust"}
 
 
 def schema_check(data):
@@ -165,6 +167,27 @@ def schema_check(data):
             if a.get("cost_basis") is not None and d(a.get("cost_basis")) is None:
                 errors.append(f"rentals[{i}].assets[{j}]: cost_basis not parseable")
 
+    passthrough = data.get("passthrough", [])
+    if not isinstance(passthrough, list):
+        errors.append("passthrough must be an array")
+        passthrough = []
+    for i, p in enumerate(passthrough):
+        if not p.get("entity_label"):
+            errors.append(f"passthrough[{i}]: missing entity_label")
+        if p.get("entity_type") not in VALID_ENTITY_TYPES:
+            errors.append(f"passthrough[{i}]: entity_type must be one of {sorted(VALID_ENTITY_TYPES)} (got {p.get('entity_type')!r})")
+        if not isinstance(p.get("is_ptp", False), bool):
+            errors.append(f"passthrough[{i}]: is_ptp must be a boolean")
+        for amt_field in (
+            "basis_carryforward_704d_1366d",
+            "at_risk_carryforward_465",
+            "suspended_passive_loss_form_8582",
+            "qbi_passthrough_form_8995",
+        ):
+            val = p.get(amt_field)
+            if val is not None and d(val) is None:
+                errors.append(f"passthrough[{i}].{amt_field} not parseable: {val!r}")
+
     if "georgia" not in data:
         warnings.append("No georgia section — GA carryovers (NOL, depreciation differences, overpayment applied) will be unavailable")
 
@@ -194,6 +217,7 @@ def validate(params):
         "tax_year": data.get("tax_year"),
         "source": data.get("source", "unspecified"),
         "rental_properties": len(data.get("rentals", []) or []),
+        "passthrough_entities": len(data.get("passthrough", []) or []),
         "has_georgia_section": "georgia" in data,
     }
 

@@ -61,6 +61,15 @@ def test_pii_nested_in_array_is_caught():
     assert any("dob" in f for f in findings)
 
 
+def test_name_fragment_key_is_caught():
+    # "taxpayer_name" is a classic PII key — must be blocked even if the
+    # schema never uses it, closing the defense-in-depth gap noted in Task 3.
+    data = clean_minimal()
+    data["taxpayer_name"] = "Jane Fabricated"
+    findings = v.pii_scan(data)
+    assert any("taxpayer" in f or "name" in f for f in findings)
+
+
 def test_validate_rejects_file_with_pii(tmp_path):
     data = clean_minimal()
     data["notes"] = ["SSN 000-00-0000"]
