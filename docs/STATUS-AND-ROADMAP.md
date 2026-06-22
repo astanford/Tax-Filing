@@ -1,6 +1,6 @@
 # Status and Roadmap
 
-*Last updated: June 10, 2026*
+*Last updated: June 22, 2026*
 
 ## What's Been Done
 
@@ -31,6 +31,17 @@ subagent review.
    `.claude/skills/tax-prep/templates/hermes-extraction-request.md`), or
    manual entry.
 
+4. **Prior-year ingestion — Phase 0 (validate Path B)** — merged via PR #4.
+   Added a `tests/` pytest harness (26 tests) validating the PII firewall and
+   carryover schema; audited the extraction prompt + downstream wiring; made
+   the carryover schema/validator **passthrough/K-1 aware** (basis §704(d)/
+   §1366(d), at-risk §465, suspended passive, PTP flag, passthrough QBI); and
+   hardened the PII firewall to also block name/taxpayer/spouse/dependent key
+   fragments. Gate = PROCEED. Design + plan + findings:
+   `docs/superpowers/specs/2026-06-22-prior-year-ingest-design.md`,
+   `docs/superpowers/plans/2026-06-22-prior-year-ingest-phase0.md`,
+   `docs/PATH-B-VALIDATION.md`.
+
 ## ⚠️ Known Limitation: K-1s Are NOT Supported
 
 The system does **not** handle Schedule K-1s (Forms 1065, 1120-S, or 1041) or
@@ -39,6 +50,11 @@ LLCs taxed as disregarded entities are supported. If any LLC has multiple
 members or elects S-corp treatment, its K-1 cannot be processed by these
 skills — consult a tax professional or handle that form manually. Also out of
 scope: foreign income, Schedule F, and complex credits (CTC, education, EIC).
+
+*Note: as of Phase 0, the prior-year **carryover ingestion** schema is
+passthrough/K-1 aware (it can capture K-1 carryovers from prior returns), but
+current-year K-1 **computation** remains unsupported — that is a separate
+planned follow-on design (see Next Steps).*
 
 ## Next Steps
 
@@ -51,15 +67,27 @@ scope: foreign income, Schedule F, and complex credits (CTC, education, EIC).
 3. `/tax-cheatsheet` per form → `/tax-audit` before filing → `/tax-advisor`
    after
 
+**In progress — prior-year ingestion subsystem:**
+- **Phase 1 (next): the `ingest/` subsystem** — a quarantined in-repo module
+  that automates Hermes Agent extraction end-to-end (staging → PII firewall →
+  verify → explicit-approve), reusing the validated validator/schema. Needs a
+  short brainstorm → plan first; open items: pin the exact Hermes invocation
+  (one-shot subprocess) and whether `verify.py` shows source page images.
+- Phase 2 (optional): multi-year analysis + intake-priming briefing.
+
 **Possible enhancements (in rough priority order):**
-- K-1 / Schedule E Part II support (would need new curated refs and Part II
-  line handling)
+- **K-1 / Schedule E Part II *computation*** — a separate planned follow-on
+  design covering the K-1 input forms (1065/1120-S/1041) and Schedule E; it
+  opens by validating the existing Schedule E Part I rental work, then adds
+  Part II (would need new curated refs and Part II line handling)
 - Full Form 8582 computation (current version is simplified) and a Form 4562
   detail calculator (current handles building SL; other assets entered as
   amounts)
 - NIIT (Form 8960) computation inside `what_if.py` (currently flag-only)
 - Curated reference for estimated-tax safe harbor rules (currently marked
   "verify on IRS.gov")
-- Unit tests + CI for the calculation scripts; demo mode with fictional data
+- CI to run the test suite (a `tests/` pytest harness now exists from Phase 0,
+  covering the prior-year validator; the calculation scripts still lack tests);
+  demo mode with fictional data
 - 2026 tax-year update (per `reference/HOW-TO-CURATE.md` — watch for the GA
   rate stepping down toward 4.99%)
