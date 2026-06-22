@@ -64,6 +64,22 @@ fixes are made. Rules held inviolate: every line-number claim cites a
 curated reference (Rule 1); all PII test fixtures use obviously fabricated
 data — e.g. SSN `000-00-0000`, "Jane Testfiler" (Rules 4/5).
 
+**Passthrough/K-1 carryover ingestion (in scope for this spec).** Phase 0
+also extends the schema + extraction prompt to capture passthrough
+carryovers from prior-year returns, so the schema does not have to be
+re-opened when the separate K-1 computation feature lands. New carryover
+fields to validate/add:
+
+- Partner/shareholder **basis** carryforward (§704(d) / §1366(d)).
+- **At-risk** carryforward (§465).
+- Suspended **passive** K-1 losses (Form 8582, the passthrough rows — not
+  just the Schedule E Part I rental rows already covered).
+- **PTP** (publicly traded partnership) suspended losses, tracked per PTP.
+- QBI from passthroughs feeding the existing QBI carryforward field.
+
+These are *extraction/carryover* fields only. Computing the current-year
+limitation ordering from them is the follow-on design's job, not this one.
+
 ### Phase 1 — `ingest/` subsystem
 
 ```
@@ -139,10 +155,27 @@ JSONs (2023 + 2024 + eventually prior 2025) — touches no PDFs and no PII.
 - **Reusability.** The subsystem is year-agnostic and intended to be re-run
   for future filings (e.g. 2026), not a one-shot for 2025.
 
-## Out of scope
+## Out of scope (and the planned follow-on)
 
-K-1s / Schedule E Part II (per `docs/STATUS-AND-ROADMAP.md`), foreign
-income, Schedule F, and complex credits — unchanged by this design.
+**In scope here:** passthrough/K-1 *carryover ingestion* (see Phase 0) — the
+prior-year extraction side only.
+
+**Deferred to a separate follow-on design** (its own design → spec → plan):
+current-year **K-1 / Schedule E Part II computation**. That follow-on covers
+two flowing-together pieces:
+
+1. **K-1 input forms** — partnership/S-corp/trust filings (Forms 1065 /
+   1120-S / 1041), needing new curated references for their line meanings.
+2. **Schedule E** reporting — where K-1 passthrough income/loss lands
+   (Part II), plus the basis → at-risk → passive limitation ordering
+   (§704(d) → §465 → §469) and QBI from passthroughs.
+
+This ingestion subsystem is built to *feed* that follow-on: the carryover
+schema is made passthrough-aware now so the follow-on consumes it without a
+schema re-open.
+
+**Still fully out of scope:** foreign income, Schedule F, and complex
+credits — unchanged by this design.
 
 ## Open items for the implementation plan
 
