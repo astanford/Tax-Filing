@@ -59,6 +59,17 @@
       ]
     }
   ],
+  "passthrough": [
+    {
+      "entity_label": "Partnership (Acme Partners LP)",
+      "entity_type": "partnership",
+      "is_ptp": false,
+      "basis_carryforward_704d_1366d": "12000.00",
+      "at_risk_carryforward_465": "8000.00",
+      "suspended_passive_loss_form_8582": "5000.00",
+      "qbi_passthrough_form_8995": "0.00"
+    }
+  ],
   "notes": [
     "Free-text reminders extracted from the return, e.g. 'Itemized in 2024, so 2025 GA refund of $223 may be federally taxable.' No PII."
   ]
