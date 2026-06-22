@@ -133,3 +133,28 @@ explicitly forbid taxpayer/spouse/dependent names but the firewall had no key-fr
 guard for them — a defense-in-depth gap. The schema uses `*_label` (not `*_name`)
 throughout, so no legitimate key collides with these fragments. Full suite (25 tests)
 confirmed no false positives after adding them.
+
+## Summary — Phase 0 gate
+
+| Artifact | Verdict |
+|---|---|
+| PII firewall (`pii_scan`) | GO (name-fragment hardening FIX applied in Task 4; no unresolved blocker) |
+| Carryover schema (`schema_check` + template) | GO |
+| Extraction prompt (`hermes-extraction-request.md`) | GO |
+| Downstream wiring (skills + calculator) | GO |
+| Passthrough/K-1 extension | ADDED |
+| End-to-end round-trip | GO |
+
+**Gate decision:** PROCEED to Phase 1.
+
+All six rows are GO or ADDED with no unresolved blockers. Open minor items:
+`withholding_line_25` field name is cosmetically imprecise (strict form line is
+25d); `salt_deducted_schedule_a_line_5e` was flagged in Task 2 as unverifiable
+from four cited refs but was subsequently confirmed against
+`reference/curated/salt-deduction-2025.md` in Task 3 (gap resolved).
+`rentals[].assets[].prior_accumulated_depreciation` wording in tax-cheatsheet/SKILL.md
+is loose (stored for audit/recapture; no broken param). None of these minor items
+block Phase 1.
+
+Test coverage: `tests/` (run `python3 -m pytest tests/`). All fixtures
+fabricated per Rule 4.
