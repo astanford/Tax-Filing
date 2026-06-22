@@ -1,0 +1,2 @@
+# Test-only tooling. NOT runtime deps — the skills/validator stay stdlib-only.
+pytest==8.3.4
