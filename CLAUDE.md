@@ -32,3 +32,37 @@ state tax return using Claude Code. Built for tax year 2025.
 
 ## Disclaimer
 These skills assist with tax return preparation. They do not constitute tax advice. Verify all numbers against source documents. Consult a qualified tax professional for your specific situation.
+
+## How Global Rules Map Here
+
+The home-directory global instructions apply, with these repo-specific clarifications.
+**Where anything below could conflict with the Rules section above, the Rules win.**
+
+- **Local Rules are supreme.** Citation discipline (Rule 1), the unverifiable
+  disclaimer (Rule 2), Python-only math (Rule 3), no PII in skill files (Rule 4),
+  and blank SSN/bank/signature fields (Rule 5) override every global default and
+  every clarification in this section. No global guidance relaxes them.
+- **repo-analyst MCP: not used in this repo.** It is not registered in this
+  environment, and the repo is small enough to Read directly. Ignore the global
+  "prefer repo-analyst" mandate here.
+- **"Tests" means the calculators + cross-checks.** This repo has no separate
+  unit-test suite. The correctness surface is the Python scripts (e.g.
+  schedule_e_calculator.py, cross_check.py, completeness_check.py) validated
+  against the source PDFs in reference/Raw/. Review and "missing tests" guidance
+  maps to these.
+- **Web research feeds curated references — it does not replace them.** Looking up
+  IRS/GA source material is allowed, but a tax rule becomes usable only by going
+  through reference/HOW-TO-CURATE.md and citing a file in reference/curated/
+  (Rule 1). If a number can't be traced to reference/curated/, say "I cannot
+  verify this — check IRS.gov" (Rule 2). A live URL is never a substitute for a
+  citation and never a side-channel around the curation process.
+- **No LLM arithmetic, ever.** The global "act when allowed" default never
+  authorizes computing a tax figure in prose. All math runs through a Python
+  script (Rule 3), even for a single line.
+- **PII safety is the dominant risk.** Beyond the global "destructive ops need
+  confirmation," treat tax documents and prior-year returns as sensitive. The
+  authoritative rules are docs/PRIVATE-DATA.md and docs/PRIOR-YEAR-DATA.md;
+  never commit anything from my-tax-docs/ or analysis/.
+- **gstack app-shipping skills are dormant here.** /ship, /canary, /qa, design
+  reviews, etc. target deployable apps; this is a document/skill repo. /browse
+  for web access still applies.
