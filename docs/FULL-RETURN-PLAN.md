@@ -68,8 +68,12 @@ Maryland.
 ## The Plan
 
 Phases are sequential gates in the repo's established style (design → plan →
-implement → review). Phases 1–4 produce the accountant-ready return; 5–6
-harden and extend.
+implement → review). Phase ordering reflects the owner's return: **K-1s and
+Schedule E are central**, so that work runs immediately after foundations and
+before the general engine — it also front-loads validating the existing
+Schedule E Part I calculator, which its own follow-on design already requires
+as the opening step. Phases 1–5 produce the accountant-ready return; 6
+hardens.
 
 ### Phase 1 — Foundations (prerequisite hardening)
 
@@ -87,7 +91,30 @@ harden and extend.
 
 *Gate: all calculators tested and passing CI; constants live in one place.*
 
-### Phase 2 — Return computation engine (`engine/`)
+### Phase 2 — K-1 / Schedule E Part II (moved up: central to this return)
+
+The already-designed follow-on (see `docs/superpowers/specs/`), promoted from
+last place because the owner's return is built around K-1s and rentals:
+
+- Open with the Phase-0-style **validation of the existing Schedule E Part I
+  work** (rental curated refs + `schedule_e_calculator.py`, all
+  never-independently-verified), gated GO/FIX/NO-GO.
+- New curated references for K-1 line meanings (Forms 1065 / 1120-S / 1041).
+- Schedule E Part II computation with the **§704(d) basis → §465 at-risk →
+  §469 passive** limitation ordering, consuming the passthrough-aware
+  carryover schema already validated in prior-year Phase 0 (basis, at-risk,
+  suspended passive, PTP-by-PTP, passthrough QBI).
+- Upgrade Form 8582 from simplified to full while inside this code anyway
+  (rental and passthrough rows interact on the same form).
+
+*Gate: Part I validated; a fabricated K-1 fixture flows through the
+limitation ordering to correct Part II lines; suspended amounts roll forward
+into the carryover schema.*
+
+The in-flight `ingest/` Phase 1 (Hermes automation) proceeds independently
+and feeds this phase with prior-year carryover data.
+
+### Phase 3 — Return computation engine (`engine/`)
 
 A deterministic Python package (sibling of the planned `ingest/`, same
 quarantine pattern) that consumes `analysis/tax-doc-summary.csv` +
@@ -97,13 +124,13 @@ every value, plus per-line `source` (which document/box or which computation)
 and `citation` (which curated ref). Computation order:
 
 1. Income schedules: B, C (existing calc), D/8949 + QDCG worksheet (new),
-   E Part I (existing calc), Schedule 1.
+   E Parts I + II (Phase 2 output), Schedule 1.
 2. Adjustments and SE: Schedule SE (new — currently only inside what_if),
    IRA/HSA/student-loan (curated refs exist).
 3. Deduction: Schedule A vs standard (existing calc), SALT (existing calc).
 4. QBI: Form 8995 with the taxable-income threshold test; **above the 8995
    threshold, emit BLOCKED → accountant** rather than attempt 8995-A.
-5. Loss limits: full Form 8582 (upgrade from simplified), Form 4562 for new
+5. Loss limits: full Form 8582 (from Phase 2), Form 4562 for new
    assets (building SL exists; add §179/other-life handling or BLOCK).
 6. Other taxes: Form 8959, Form 8960 (new), AMT *screen* (compute the 6251
    trigger test; if triggered, BLOCK → accountant rather than model AMT).
@@ -114,13 +141,13 @@ and `citation` (which curated ref). Computation order:
 
 Design rule: **compute with citation, or BLOCK — never estimate.** BLOCKED
 items become interview questions (missing input) or accountant flags (beyond
-scope, e.g. 8995-A, AMT, K-1 until Phase 6).
+scope, e.g. 8995-A, AMT).
 
 *Gate: engine reproduces the prior-year return's key lines from prior-year
 inputs within rounding (regression test), and computes a full fabricated-
 fixture return end-to-end.*
 
-### Phase 3 — Interview skill (`/tax-interview`)
+### Phase 4 — Interview skill (`/tax-interview`)
 
 - Engine emits `analysis/missing-inputs.json` (each item: form/line, why
   needed, citation).
@@ -134,7 +161,7 @@ fixture return end-to-end.*
 *Gate: a fabricated scenario with deliberately missing data converges to a
 complete manifest purely through the interview loop.*
 
-### Phase 4 — Form output + accountant package (`/tax-return`)
+### Phase 5 — Form output + accountant package (`/tax-return`)
 
 - **PDF filling**: map manifest lines to AcroForm field names of the official
   IRS PDFs (f1040, schedules) and GA 500 using `pypdf` (deps quarantined in
@@ -150,24 +177,19 @@ complete manifest purely through the interview loop.*
   remain), all BLOCKED/accountant-flag items, open questions; source-document
   index; prior-year reconciliation (YoY line deltas); citation appendix.
 
-*Gate: `/tax-audit` (upgraded, Phase 5 overlap) passes on the emitted return;
+*Gate: `/tax-audit` (upgraded, Phase 6 overlap) passes on the emitted return;
 read-back diff is empty; package reviewed by owner.*
 
-### Phase 5 — Audit upgrade
+### Phase 6 — Audit upgrade
 
 - `/tax-audit` gains a third input: the engine manifest. It becomes a
   three-way check (source CSV ↔ manifest ↔ filled PDFs) instead of verifying
   hand-entered values.
-- Curate the estimated-tax safe-harbor reference; add the 2210 check.
-
-### Phase 6 — K-1 / Schedule E Part II (required)
-
-The already-designed follow-on (see `docs/superpowers/specs/`): validate the
-existing Schedule E Part I work, then add Part II with the §704(d) → §465 →
-§469 ordering, consuming the passthrough-aware carryover schema from Phase 0.
-**Required for finalization: the owner's 2025 documents include K-1s** (see
-Scope Decisions). The in-flight `ingest/` Phase 1 (Hermes automation) proceeds
-independently and feeds Phases 2–3 with prior-year data.
+- Curate the estimated-tax safe-harbor reference; add the 2210 check. With
+  **no W-2 withholding in 2025** (see Scope Decisions), estimated payments
+  and the safe-harbor test carry the whole payments section — this reference
+  is higher priority than originally ranked and should be curated during
+  Phase 3 rather than waiting for Phase 6.
 
 ## Tooling: Plugins, MCPs, Skills
 
@@ -197,8 +219,8 @@ independently and feeds Phases 2–3 with prior-year data.
 - **New repo / framework rewrite** — the quarantined-subsystem pattern
   (`ingest/`, now `engine/`) already fits.
 
-**New skills this plan adds:** `/tax-interview` (Phase 3), `/tax-return`
-(Phase 4). Existing four skills keep their roles; `/tax-cheatsheet` becomes
+**New skills this plan adds:** `/tax-interview` (Phase 4), `/tax-return`
+(Phase 5). Existing four skills keep their roles; `/tax-cheatsheet` becomes
 optional explanation rather than the primary filing path.
 
 ## Scope Decisions (answered by owner, 2026-07-03)
@@ -206,22 +228,35 @@ optional explanation rather than the primary filing path.
 1. **Filing status 2025: married filing jointly.** MFJ paths get first-class
    regression tests; the engine still ships all four statuses via the shared
    constants module.
-2. **2025 documents include both brokerage 1099-Bs and K-1s.** Therefore
-   Schedule D / Form 8949 / QDCG worksheet in Phase 2 is load-bearing, and
-   **Phase 6 (K-1 / Schedule E Part II) is required — not conditional —
-   before the 2025 return can be finalized.** Until Phase 6 lands, the engine
-   BLOCKs K-1 items to the accountant flags list.
-3. **Identity fields stay blank** (Rule 5 unchanged); the accountant adds
+2. **2025 documents include both brokerage 1099-Bs and K-1s; K-1s and
+   Schedule E are central to the return.** Therefore K-1 / Schedule E Part II
+   work is **promoted to Phase 2** (immediately after foundations), and
+   Schedule D / Form 8949 / QDCG worksheet in the engine phase is
+   load-bearing.
+3. **No W-2 for 2025.** The system keeps W-2 support (extraction, wage lines,
+   Form 8959 wage paths), but this filer's 2025 fixtures, regression tests,
+   and demo taxpayer should mirror a no-W-2 profile: income from K-1s,
+   rentals, and investments. Consequences: employer-withholding cross-checks
+   are not the payments backbone — **estimated payments + the safe-harbor
+   rules are**, raising the priority of the estimated-tax curated reference
+   (curate during Phase 3); SE tax and Additional Medicare hinge on K-1/
+   self-employment amounts rather than wages.
+4. **Identity fields stay blank** (Rule 5 unchanged); the accountant adds
    SSN/bank/signature at filing. No local overlay.
-4. **E-filing is out of scope**; the accountant reviews and files. The
+5. **E-filing is out of scope**; the accountant reviews and files. The
    deliverable is the review package.
+6. **Tooling approved (2026-07-03):** the full "Adopt" list — pypdf, GitHub
+   Actions CI, QuickBooks MCP, Google Drive MCP, deep-research for curation,
+   Todoist MCP.
 
 ## Verification
 
 - Every phase gate above names its acceptance test.
 - End-to-end proof for the whole plan: a **demo-mode fabricated taxpayer**
-  (fictional W-2 + 1099s + two rentals + prior-year carryovers, all
-  `000-00-0000`-style data, committable under `examples/`) that runs
+  mirroring the owner's profile — fictional K-1s + brokerage 1099s + two
+  rentals + estimated payments + prior-year carryovers, **no W-2** (a
+  separate small W-2 fixture keeps that path covered), all
+  `000-00-0000`-style data, committable under `examples/` — that runs
   `/tax-prep` → engine → interview → `/tax-return` → `/tax-audit` and yields a
   complete, internally consistent package. This doubles as the CI regression
   suite and the roadmap's wished-for "demo mode."
