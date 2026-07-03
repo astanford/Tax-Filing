@@ -21,6 +21,35 @@ All arithmetic uses Decimal — no float math (per CLAUDE.md rules).
 import json
 import sys
 from decimal import Decimal, ROUND_HALF_UP
+from pathlib import Path
+
+# Shared 2025 constants live at the repo root (engine/constants_2025.py).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from engine.constants_2025 import (
+    ADDITIONAL_MEDICARE_RATE,
+    FEDERAL_BRACKETS,
+    GA_DEPENDENT_EXEMPTION,
+    GA_ITEMIZER_CREDIT_PER_TAXPAYER,
+    GA_STANDARD_DEDUCTION,
+    GA_TAX_RATE,
+    HSA_FAMILY_LIMIT,
+    IRA_DEDUCTIBILITY_PHASEOUT,
+    IRA_LIMIT,
+    MEDICAL_THRESHOLD_RATE,
+    MEDICARE_SE_RATE,
+    MEDICARE_TAX_THRESHOLD,
+    RETIREMENT_401K_LIMIT,
+    SALT_CAP,
+    SALT_PHASE_OUT_RATE,
+    SE_NET_FACTOR,
+    SE_TAX_THRESHOLD,
+    SS_RATE,
+    SS_WAGE_BASE,
+    STANDARD_DEDUCTION,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -57,153 +86,10 @@ def pct(val):
     return f"{float(cents(val * Decimal('100')))}%"
 
 
-# ---------------------------------------------------------------------------
-# Federal Income Tax Brackets — 2025 MFJ
-# (Source: 2025-tax-numbers.md, Federal Income Tax Brackets)
-# Each tuple: (upper_bound, rate, base_tax_at_lower_bound)
-# upper_bound=None means no ceiling (top bracket).
-# ---------------------------------------------------------------------------
-
-FEDERAL_BRACKETS = {
-    "MFJ": [
-        (Decimal("23850"),  Decimal("0.10"), Decimal("0")),
-        (Decimal("96950"),  Decimal("0.12"), Decimal("2385")),
-        (Decimal("206700"), Decimal("0.22"), Decimal("11157")),
-        (Decimal("394600"), Decimal("0.24"), Decimal("35302")),
-        (Decimal("501050"), Decimal("0.32"), Decimal("80398")),
-        (Decimal("751600"), Decimal("0.35"), Decimal("114462")),
-        (None,              Decimal("0.37"), Decimal("188770")),
-    ],
-    "Single": [
-        (Decimal("11925"),  Decimal("0.10"), Decimal("0")),
-        (Decimal("48475"),  Decimal("0.12"), Decimal("1192.50")),
-        (Decimal("103350"), Decimal("0.22"), Decimal("5578.50")),
-        (Decimal("197300"), Decimal("0.24"), Decimal("17651.50")),
-        (Decimal("250525"), Decimal("0.32"), Decimal("40199.50")),
-        (Decimal("626350"), Decimal("0.35"), Decimal("57231.50")),
-        (None,              Decimal("0.37"), Decimal("188769.75")),
-    ],
-    "HoH": [
-        (Decimal("17000"),  Decimal("0.10"), Decimal("0")),
-        (Decimal("64850"),  Decimal("0.12"), Decimal("1700")),
-        (Decimal("103350"), Decimal("0.22"), Decimal("7442")),
-        (Decimal("197300"), Decimal("0.24"), Decimal("15912")),
-        (Decimal("250500"), Decimal("0.32"), Decimal("38460")),
-        (Decimal("626350"), Decimal("0.35"), Decimal("55484")),
-        (None,              Decimal("0.37"), Decimal("187032")),
-    ],
-}
-# MFS uses half the MFJ bracket widths — approximated via Single brackets.
-FEDERAL_BRACKETS["MFS"] = FEDERAL_BRACKETS["Single"]
-
-
-# ---------------------------------------------------------------------------
-# Georgia State Income Tax — 2025 flat rate, all filing statuses
-# (Source: 2025-tax-numbers.md, Georgia State Income Tax;
-#  georgia-500-guide.md, Tax Computation, Line 16)
-# ---------------------------------------------------------------------------
-
-GA_TAX_RATE = Decimal("0.0519")
-
-
-# ---------------------------------------------------------------------------
-# Standard Deductions (Source: 2025-tax-numbers.md, Standard Deduction)
-# ---------------------------------------------------------------------------
-
-STANDARD_DEDUCTION = {
-    "MFJ": Decimal("31500"),
-    "Single": Decimal("15750"),
-    "MFS": Decimal("15750"),
-    "HoH": Decimal("23625"),
-}
-
-
-# ---------------------------------------------------------------------------
-# SALT Cap Parameters (Source: salt-deduction-2025.md, Overall SALT Cap)
-# ---------------------------------------------------------------------------
-
-SALT_CAP = {
-    "MFJ":    {"base": Decimal("40000"), "floor": Decimal("10000"), "threshold": Decimal("500000")},
-    "Single": {"base": Decimal("40000"), "floor": Decimal("10000"), "threshold": Decimal("500000")},
-    "HoH":    {"base": Decimal("40000"), "floor": Decimal("10000"), "threshold": Decimal("500000")},
-    "MFS":    {"base": Decimal("20000"), "floor": Decimal("5000"),  "threshold": Decimal("250000")},
-}
-
-SALT_PHASE_OUT_RATE = Decimal("0.30")
-
-
-# ---------------------------------------------------------------------------
-# Georgia Deduction Parameters (Source: georgia-500-guide.md)
-# ---------------------------------------------------------------------------
-
-GA_STANDARD_DEDUCTION = {
-    "MFJ": Decimal("24000"),
-    "Single": Decimal("12000"),
-    "MFS": Decimal("12000"),
-    "HoH": Decimal("12000"),  # GA gives HoH no premium over Single
-}
-
-# Dependent exemption: $4,000 per dependent (Line 7c x $4,000).
-# No personal exemption for taxpayer/spouse, and no income phase-out.
-# (Source: georgia-500-guide.md, Line 14)
-GA_DEPENDENT_EXEMPTION = Decimal("4000")
-
-# Eligible Itemizer Tax Credit: up to $300 per taxpayer when itemizing,
-# nonrefundable, cannot exceed GA tax. (Source: georgia-500-guide.md, Line 19)
-GA_ITEMIZER_CREDIT_PER_TAXPAYER = Decimal("300")
-
-
-# ---------------------------------------------------------------------------
-# Additional Medicare Tax (Source: additional-medicare-tax.md)
-# ---------------------------------------------------------------------------
-
-MEDICARE_TAX_THRESHOLD = {
-    "MFJ": Decimal("250000"),
-    "Single": Decimal("200000"),
-    "HoH": Decimal("200000"),
-    "MFS": Decimal("125000"),
-}
-
-ADDITIONAL_MEDICARE_RATE = Decimal("0.009")
-
-
-# ---------------------------------------------------------------------------
-# Self-Employment Tax (Source: self-employment-qbi.md)
-# ---------------------------------------------------------------------------
-
-SE_TAX_THRESHOLD = Decimal("400")
-SE_TAX_RATE = Decimal("0.153")        # 12.4% SS + 2.9% Medicare
-SE_NET_FACTOR = Decimal("0.9235")     # 92.35% adjustment
-SS_WAGE_BASE = Decimal("176100")      # (Source: 2025-tax-numbers.md)
-SS_RATE = Decimal("0.124")
-MEDICARE_SE_RATE = Decimal("0.029")
-
-
-# ---------------------------------------------------------------------------
-# Medical Expense Threshold (Source: 2025-tax-numbers.md)
-# ---------------------------------------------------------------------------
-
-MEDICAL_THRESHOLD_RATE = Decimal("0.075")
-
-
-# ---------------------------------------------------------------------------
-# Retirement / HSA Limits (Source: retirement-hsa-limits.md)
-# VERIFY AGAINST IRS.GOV — raw sources not yet curated.
-# ---------------------------------------------------------------------------
-
-RETIREMENT_401K_LIMIT = Decimal("23500")
-IRA_LIMIT = Decimal("7000")
-HSA_FAMILY_LIMIT = Decimal("8550")
-HSA_SELF_LIMIT = Decimal("4300")
-
-# IRA deductibility phase-out for MFJ with employer plan
-# (Source: retirement-hsa-limits.md, Traditional IRA Deductibility)
-IRA_DEDUCTIBILITY_PHASEOUT = {
-    "MFJ": {"lower": Decimal("126000"), "upper": Decimal("146000")},
-    "Single": {"lower": Decimal("79000"), "upper": Decimal("89000")},
-    "HoH": {"lower": Decimal("79000"), "upper": Decimal("89000")},
-    "MFS": {"lower": Decimal("0"), "upper": Decimal("10000")},
-}
+# Constants (brackets, deductions, SALT, GA, Medicare, SE, retirement limits)
+# are imported from engine/constants_2025.py — see its citations. The bracket
+# tables there are verified against Rev. Proc. 2024-40 for all four filing
+# statuses, including a true MFS table (previously approximated via Single).
 
 
 # ---------------------------------------------------------------------------
@@ -391,7 +277,7 @@ def compute_ira_deductibility(magi, ira_amount, filing_status, has_employer_plan
 # ---------------------------------------------------------------------------
 
 def compute_total_tax(params):
-    """Compute full federal + MD state + local tax from input parameters.
+    """Compute full federal + Georgia state tax from input parameters.
 
     Returns a dict with all intermediate values for comparison.
     """

@@ -16,6 +16,14 @@ Implements the OBBBA SALT cap rules for 2025:
 import json
 import sys
 from decimal import Decimal, ROUND_HALF_UP
+from pathlib import Path
+
+# Shared 2025 constants live at the repo root (engine/constants_2025.py).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from engine.constants_2025 import SALT_CAP, SALT_PHASE_OUT_RATE
 
 
 def d(val):
@@ -33,32 +41,15 @@ def cents(val):
     return val.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-# 2025 SALT cap parameters (Source: salt-deduction-2025.md)
+# Shared schema uses base/floor/threshold; this script also reports the rate.
 SALT_PARAMS = {
-    "MFJ": {
-        "base_cap": Decimal("40000"),
-        "floor": Decimal("10000"),
-        "phase_out_threshold": Decimal("500000"),
-        "phase_out_rate": Decimal("0.30"),
-    },
-    "MFS": {
-        "base_cap": Decimal("20000"),
-        "floor": Decimal("5000"),
-        "phase_out_threshold": Decimal("250000"),
-        "phase_out_rate": Decimal("0.30"),
-    },
-    "Single": {
-        "base_cap": Decimal("40000"),
-        "floor": Decimal("10000"),
-        "phase_out_threshold": Decimal("500000"),
-        "phase_out_rate": Decimal("0.30"),
-    },
-    "HoH": {
-        "base_cap": Decimal("40000"),
-        "floor": Decimal("10000"),
-        "phase_out_threshold": Decimal("500000"),
-        "phase_out_rate": Decimal("0.30"),
-    },
+    status: {
+        "base_cap": params["base"],
+        "floor": params["floor"],
+        "phase_out_threshold": params["threshold"],
+        "phase_out_rate": SALT_PHASE_OUT_RATE,
+    }
+    for status, params in SALT_CAP.items()
 }
 
 

@@ -1,8 +1,12 @@
 import pathlib
 import sys
 
-# validate_prior_year.py lives under the tax-prep skill, not on the path.
 # tests/ is at the repo root, so parent.parent is the repo root.
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
-SCRIPTS = REPO_ROOT / ".claude" / "skills" / "tax-prep" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
+
+# Repo root on the path so `engine` (shared constants) is importable.
+sys.path.insert(0, str(REPO_ROOT))
+
+# Skill scripts live under .claude/skills/*/scripts, not on the path.
+for _skill in ("tax-prep", "tax-cheatsheet", "tax-audit", "tax-advisor"):
+    sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / _skill / "scripts"))

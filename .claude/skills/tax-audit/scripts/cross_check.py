@@ -18,6 +18,14 @@ import json
 import os
 import sys
 from decimal import Decimal, ROUND_HALF_UP
+from pathlib import Path
+
+# Shared 2025 constants live at the repo root (engine/constants_2025.py).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from engine.constants_2025 import FEDERAL_BRACKETS
 
 
 # ---------------------------------------------------------------------------
@@ -60,30 +68,9 @@ def compare(expected, actual):
     return "fail"
 
 
-# ---------------------------------------------------------------------------
-# Federal Income Tax Brackets — 2025
-# (Source: 2025-tax-numbers.md, Federal Income Tax Brackets)
-#
-# Each tuple: (upper_bound, rate, base_tax_at_lower_bound)
-# upper_bound=None means no ceiling (top bracket).
-# ---------------------------------------------------------------------------
-
-FEDERAL_BRACKETS = {
-    "MFJ": [
-        (Decimal("23850"),  Decimal("0.10"), Decimal("0")),
-        (Decimal("96950"),  Decimal("0.12"), Decimal("2385")),
-        (Decimal("206700"), Decimal("0.22"), Decimal("11157")),
-        (Decimal("394600"), Decimal("0.24"), Decimal("35302")),
-        (Decimal("501050"), Decimal("0.32"), Decimal("80398")),
-        (Decimal("751600"), Decimal("0.35"), Decimal("114462")),
-        (None,              Decimal("0.37"), Decimal("188770")),
-    ],
-    # Single and HoH brackets can be added here when needed.
-    # For now, MFJ is the primary use case.
-}
-
-# Alias: MFS uses half the MFJ bracket widths, but for a first pass we only
-# support MFJ. Other statuses will produce a warning, not a failure.
+# Federal brackets for all four filing statuses come from
+# engine/constants_2025.py (Source: 2025-tax-numbers.md, Federal Income Tax
+# Brackets; raw source reference/Raw/rp-24-40.pdf).
 
 
 # ---------------------------------------------------------------------------
@@ -366,7 +353,7 @@ def check_tax_bracket(fv, filing_status):
             "expected": "N/A",
             "actual": str(cents(form_tax)),
             "difference": "N/A",
-            "detail": f"Tax bracket verification not available for filing status '{filing_status}' — only MFJ supported. Verify manually."
+            "detail": f"Unknown filing status '{filing_status}' — use MFJ, Single, HoH, or MFS. Verify manually."
         }
 
     diff = form_tax - ordinary_tax

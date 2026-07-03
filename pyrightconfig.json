@@ -1,0 +1,9 @@
+{
+  "extraPaths": [
+    ".",
+    ".claude/skills/tax-prep/scripts",
+    ".claude/skills/tax-cheatsheet/scripts",
+    ".claude/skills/tax-audit/scripts",
+    ".claude/skills/tax-advisor/scripts"
+  ]
+}
