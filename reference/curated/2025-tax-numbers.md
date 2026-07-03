@@ -2,6 +2,7 @@
 
 ## Source
 - Instructions for Form 1040 (2025), Catalog Number 24811V, Feb 25, 2026 — pp. 6–9 (What's New, Filing Requirements)
+- **Rev. Proc. 2024-40** (IRS official 2025 inflation adjustments; local copy at `reference/Raw/rp-24-40.pdf`) — §2.01 rate tables, §2.03 capital gains thresholds
 - Bipartisan Policy Center, "2025 Federal Income Tax Brackets and Other 2025 Tax Rules," Jan 29, 2026
 - One Big Beautiful Bill Act (OBBBA), H.R. 1, signed July 4, 2025
 - 2025 IT-511 Georgia Individual Income Tax Instruction Booklet (dor.georgia.gov; local copy at `reference/Raw/2025-it511-booklet.pdf`)
@@ -13,29 +14,80 @@
 
 ---
 
-## Federal Income Tax Brackets — MFJ (2025)
+## Federal Income Tax Brackets — All Filing Statuses (2025)
 
-| Rate | Taxable Income Range (MFJ) | Tax on Lower Bracket |
-|------|----------------------------|---------------------|
+> ⚠️ **Correction (2026-07-03):** the MFJ 37% "Tax on Lower Bracket" was
+> previously listed here as $188,770 — that is the **Single** top-bracket
+> figure. The correct MFJ value is **$202,154.50**, verified against
+> Rev. Proc. 2024-40 §2.01 Table 1 (`reference/Raw/rp-24-40.pdf`).
+
+### Married Filing Jointly / Qualifying Surviving Spouse
+
+| Rate | Taxable Income Range | Tax on Lower Bracket |
+|------|----------------------|---------------------|
 | 10% | $0 – $23,850 | $0 |
 | 12% | $23,851 – $96,950 | $2,385 |
 | 22% | $96,951 – $206,700 | $11,157 |
 | 24% | $206,701 – $394,600 | $35,302 |
 | 32% | $394,601 – $501,050 | $80,398 |
 | 35% | $501,051 – $751,600 | $114,462 |
-| 37% | Over $751,600 | $188,770 |
+| 37% | Over $751,600 | $202,154.50 |
 
-[Form 1040 Instructions (2025), Page 6; Bipartisan Policy Center, Table 3]
+### Head of Household
 
-## Qualified Dividends and Capital Gain (QDCG) Tax Rates — MFJ
+| Rate | Taxable Income Range | Tax on Lower Bracket |
+|------|----------------------|---------------------|
+| 10% | $0 – $17,000 | $0 |
+| 12% | $17,001 – $64,850 | $1,700 |
+| 22% | $64,851 – $103,350 | $7,442 |
+| 24% | $103,351 – $197,300 | $15,912 |
+| 32% | $197,301 – $250,500 | $38,460 |
+| 35% | $250,501 – $626,350 | $55,484 |
+| 37% | Over $626,350 | $187,031.50 |
 
-| Rate | Taxable Income Range (MFJ) |
-|------|----------------------------|
-| 0% | $0 – $96,700 |
-| 15% | $96,701 – $600,050 |
-| 20% | Over $600,050 |
+### Single
 
-[Bipartisan Policy Center, Table 8]
+| Rate | Taxable Income Range | Tax on Lower Bracket |
+|------|----------------------|---------------------|
+| 10% | $0 – $11,925 | $0 |
+| 12% | $11,926 – $48,475 | $1,192.50 |
+| 22% | $48,476 – $103,350 | $5,578.50 |
+| 24% | $103,351 – $197,300 | $17,651 |
+| 32% | $197,301 – $250,525 | $40,199 |
+| 35% | $250,526 – $626,350 | $57,231 |
+| 37% | Over $626,350 | $188,769.75 |
+
+### Married Filing Separately
+
+Same as Single through the 32% bracket; the 35% bracket ends at $375,800
+(half of the MFJ $751,600) and 37% applies above that.
+
+| Rate | Taxable Income Range | Tax on Lower Bracket |
+|------|----------------------|---------------------|
+| 10% | $0 – $11,925 | $0 |
+| 12% | $11,926 – $48,475 | $1,192.50 |
+| 22% | $48,476 – $103,350 | $5,578.50 |
+| 24% | $103,351 – $197,300 | $17,651 |
+| 32% | $197,301 – $250,525 | $40,199 |
+| 35% | $250,526 – $375,800 | $57,231 |
+| 37% | Over $375,800 | $101,077.25 |
+
+[Rev. Proc. 2024-40 §2.01 Tables 1–4 (`reference/Raw/rp-24-40.pdf`); Form
+1040 Instructions (2025), Page 6; Bipartisan Policy Center, Table 3]
+
+## Qualified Dividends and Capital Gain (QDCG) Tax Rates — All Statuses
+
+Taxable income up to the 0%-max is taxed at 0%; up to the 15%-max at 15%;
+above that at 20%.
+
+| Filing Status | 0% max | 15% max |
+|---------------|--------|---------|
+| MFJ / QSS | $96,700 | $600,050 |
+| MFS | $48,350 | $300,000 |
+| HoH | $64,750 | $566,700 |
+| Single | $48,350 | $533,400 |
+
+[Rev. Proc. 2024-40 §2.03 (`reference/Raw/rp-24-40.pdf`); Bipartisan Policy Center, Table 8]
 
 ## Standard Deduction (2025)
 

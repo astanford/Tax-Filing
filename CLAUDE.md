@@ -15,6 +15,7 @@ state tax return using Claude Code. Built for tax year 2025.
 | What | Where |
 |------|-------|
 | Curated IRS/GA references | reference/curated/ |
+| Shared 2025 tax constants (single source for all scripts) | engine/constants_2025.py |
 | Reference curation guide | reference/HOW-TO-CURATE.md |
 | Known pitfalls | docs/KNOWN-PITFALLS.md |
 | Example outputs | examples/ |
@@ -45,13 +46,13 @@ The home-directory global instructions apply, with these repo-specific clarifica
 - **repo-analyst MCP: not used in this repo.** It is not registered in this
   environment, and the repo is small enough to Read directly. Ignore the global
   "prefer repo-analyst" mandate here.
-- **"Tests" means the calculators + cross-checks.** This repo has no separate
-  unit-test suite. The correctness surface is the Python scripts (e.g.
-  .claude/skills/tax-cheatsheet/scripts/schedule_e_calculator.py,
-  .claude/skills/tax-audit/scripts/cross_check.py, and
-  .claude/skills/tax-audit/scripts/completeness_check.py) validated against the
-  source PDFs in reference/Raw/. Review and "missing tests" guidance maps to
-  these.
+- **"Tests" means the pytest suite in tests/.** Run `python -m pytest tests/`
+  (CI runs it on every PR via .github/workflows/tests.yml). It covers the
+  calculator scripts, cross-checks, the shared constants module
+  (engine/constants_2025.py — bracket tables verified against
+  reference/Raw/rp-24-40.pdf), and the prior-year PII validator. New or
+  changed calculation logic needs tests validated against the source PDFs in
+  reference/Raw/.
 - **Web research feeds curated references — it does not replace them.** Looking up
   IRS/GA source material is allowed, but a tax rule becomes usable only by going
   through reference/HOW-TO-CURATE.md and citing a file in reference/curated/

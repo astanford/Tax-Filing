@@ -21,6 +21,19 @@ Medical expense threshold: 7.5% of AGI (Source: 2025-tax-numbers.md)
 import json
 import sys
 from decimal import Decimal, ROUND_HALF_UP
+from pathlib import Path
+
+# Shared 2025 constants live at the repo root (engine/constants_2025.py).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from engine.constants_2025 import (
+    MEDICAL_THRESHOLD_RATE,
+    SALT_CAP,
+    SALT_PHASE_OUT_RATE as PHASE_OUT_RATE,
+    STANDARD_DEDUCTION,
+)
 
 
 def d(val):
@@ -36,28 +49,6 @@ def d(val):
 def cents(val):
     """Round to nearest cent."""
     return val.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-
-# 2025 standard deduction (Source: 2025-tax-numbers.md)
-STANDARD_DEDUCTION = {
-    "MFJ": Decimal("31500"),
-    "Single": Decimal("15750"),
-    "MFS": Decimal("15750"),
-    "HoH": Decimal("23625"),
-}
-
-# SALT cap parameters (Source: salt-deduction-2025.md)
-SALT_CAP = {
-    "MFJ":    {"base": Decimal("40000"), "floor": Decimal("10000"), "threshold": Decimal("500000")},
-    "Single": {"base": Decimal("40000"), "floor": Decimal("10000"), "threshold": Decimal("500000")},
-    "HoH":    {"base": Decimal("40000"), "floor": Decimal("10000"), "threshold": Decimal("500000")},
-    "MFS":    {"base": Decimal("20000"), "floor": Decimal("5000"),  "threshold": Decimal("250000")},
-}
-
-# Medical expense threshold (Source: 2025-tax-numbers.md)
-MEDICAL_THRESHOLD_RATE = Decimal("0.075")
-
-PHASE_OUT_RATE = Decimal("0.30")
 
 
 def compare(data):
