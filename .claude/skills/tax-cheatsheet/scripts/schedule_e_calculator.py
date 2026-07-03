@@ -34,6 +34,14 @@ All arithmetic uses Decimal — no float math (per CLAUDE.md rules).
 import json
 import sys
 from decimal import Decimal, ROUND_HALF_UP
+from pathlib import Path
+
+# Shared MACRS tables live at the repo root (engine/macrs_tables.py).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from engine.macrs_tables import FINAL_TABLE_YEAR, macrs_sl_pct
 
 
 # ---------------------------------------------------------------------------
@@ -97,32 +105,22 @@ EXPENSE_LINES = [
 
 
 # ---------------------------------------------------------------------------
-# Depreciation — straight line, mid-month convention, using the printed
-# MACRS percentage tables (the IRS tables round slightly differently than
-# the raw formula, especially Table A-7a).
+# Depreciation — straight line, mid-month convention, using the COMPLETE
+# printed MACRS percentage tables in engine/macrs_tables.py, including the
+# 3.636/3.637 alternation (A-6 years 10-27) and the partial penultimate/
+# final recovery years (A-6 years 28-29, A-7a year 40).
 # (Source: rental-depreciation.md, MACRS Percentage Tables —
 #  Pub 946 (2025), Appendix A, Tables A-6 and A-7a)
 # ---------------------------------------------------------------------------
-
-# Year-1 percentage by placed-in-service month (Jan..Dec)
-YEAR1_PCT = {
-    "27.5": [Decimal(p) for p in (
-        "3.485", "3.182", "2.879", "2.576", "2.273", "1.970",
-        "1.667", "1.364", "1.061", "0.758", "0.455", "0.152")],
-    "39": [Decimal(p) for p in (
-        "2.461", "2.247", "2.033", "1.819", "1.605", "1.391",
-        "1.177", "0.963", "0.749", "0.535", "0.321", "0.107")],
-}
-
-# Steady-state (full-year) percentage; Table A-6 alternates 3.636/3.637 in
-# years 10-27 — 3.636 is used here, within the repo's $1 audit tolerance.
-STEADY_PCT = {"27.5": Decimal("3.636"), "39": Decimal("2.564")}
-
 
 def compute_building_depreciation(dep, tax_year, notes):
     """Straight-line MACRS for the building: 27.5-year residential or
     39-year nonresidential (transient/hotel-like use), mid-month convention,
     via the Pub 946 Appendix A percentage tables.
+
+    building_basis must EXCLUDE non-depreciable land — allocate the purchase
+    price between land and building first (Source: rental-depreciation.md,
+    Land Is Not Depreciable).
     """
     basis = d(dep.get("building_basis"))
     recovery_key = str(dep.get("recovery_years", "27.5")).strip()
@@ -131,33 +129,28 @@ def compute_building_depreciation(dep, tax_year, notes):
 
     if basis <= 0:
         return Decimal("0"), False
-    if recovery_key not in YEAR1_PCT:
+    if recovery_key not in FINAL_TABLE_YEAR:
         notes.append(f"Unsupported recovery period '{recovery_key}' — use '27.5' or '39'. No depreciation computed.")
         return Decimal("0"), False
     if not 1 <= pis_month <= 12:
         notes.append(f"Invalid placed-in-service month {pis_month} — no depreciation computed.")
         return Decimal("0"), False
 
-    years_elapsed = tax_year - pis_year
-    placed_this_year = years_elapsed == 0
+    table_year = tax_year - pis_year + 1   # printed table's "Year" column
+    placed_this_year = table_year == 1
 
-    if years_elapsed < 0:
+    if table_year < 1:
         notes.append("Building placed in service after the tax year — no depreciation.")
         return Decimal("0"), False
 
-    if placed_this_year:
-        pct = YEAR1_PCT[recovery_key][pis_month - 1]
-        return cents(basis * pct / Decimal("100")), True
-
-    # Recovery period exhausted (approximate check; the final year is a
-    # partial mid-month year — verify against the Pub 946 table)
-    if Decimal(str(years_elapsed)) > Decimal(recovery_key):
+    pct = macrs_sl_pct(recovery_key, table_year, pis_month)
+    if pct == 0:
         notes.append(
-            f"Building recovery period (~{recovery_key} yrs) appears exhausted — verify final-year proration against rental-depreciation.md table."
+            f"Building fully depreciated (recovery period ended in table year {FINAL_TABLE_YEAR[recovery_key]}; this is year {table_year})."
         )
         return Decimal("0"), False
 
-    return cents(basis * STEADY_PCT[recovery_key] / Decimal("100")), False
+    return cents(basis * pct / Decimal("100")), placed_this_year
 
 
 # ---------------------------------------------------------------------------
@@ -284,7 +277,7 @@ def schedule_e(data):
         bonus = d(dep.get("bonus_depreciation_claimed"))
         line_18 = building_dep + other_assets_dep + bonus
         if line_18 != 0:
-            lines["Line 18 (Depreciation)"] = str(cents(line_18))
+            lines["Line 18 (Depreciation expense or depletion)"] = str(cents(line_18))
         if placed_this_year or bonus > 0:
             form_4562_needed = True
         if bonus > 0:
@@ -327,6 +320,11 @@ def schedule_e(data):
     # --- Simplified Form 8582 ---
     # Passive income first absorbs passive losses; the $25K allowance applies
     # only to rental-activity losses (active participation).
+    # Simplifications disclosed: prior_suspended_loss is attributed entirely
+    # to the rental-RE active-participation bucket (Form 8582 line 1c) — if
+    # any prior suspended loss came from a Part V (other passive) activity it
+    # would not qualify for the allowance; commercial revitalization
+    # deductions (CRD) are not handled.
     # (Source: passive-activity-losses.md, Form 8582 Flow)
     passive_income = rental_income + nonrental_passive_income
     passive_losses = rental_losses + nonrental_passive_losses + prior_suspended
@@ -334,8 +332,12 @@ def schedule_e(data):
     absorbed = min(passive_income, passive_losses)
     remaining_loss = passive_losses - absorbed
 
-    # Allowance applies to the rental-activity share of the remaining loss
-    rental_share_remaining = min(remaining_loss, rental_losses + prior_suspended)
+    # Allowance base is the rental bucket's NET loss (Form 8582 line 4 =
+    # smaller of the line 1d loss or the line 3 loss) — rental income must
+    # net against rental losses here, not be pooled away by other-passive
+    # losses. (Source: passive-activity-losses.md, Part II Line 4)
+    rental_net_loss = max(Decimal("0"), rental_losses + prior_suspended - rental_income)
+    rental_share_remaining = min(remaining_loss, rental_net_loss)
     allowance = compute_allowance(magi, filing_status, active_participation, mfs_lived_apart_all_year, notes)
     allowed_by_allowance = min(rental_share_remaining, allowance)
 
@@ -362,9 +364,11 @@ def schedule_e(data):
         "properties": prop_results,
         "schedule_c_excluded_properties": schedule_c_excluded,
         "totals": {
+            # Line 23 roll-ups: 23a = all Line 3 rents; 23d = all Line 18;
+            # 23e = all Line 20. (Source: schedule-e-guide.md, Totals)
             "line_23a_total_rents": str(cents(total_rents)),
-            "line_20_total_expenses": str(cents(total_expenses_all)),
-            "total_depreciation_line_18": str(cents(total_depreciation)),
+            "line_23e_total_expenses": str(cents(total_expenses_all)),
+            "line_23d_total_depreciation": str(cents(total_depreciation)),
         },
         "form_8582": {
             "passive_income": str(cents(passive_income)),

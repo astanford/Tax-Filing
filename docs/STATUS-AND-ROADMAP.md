@@ -42,6 +42,16 @@ subagent review.
    `docs/superpowers/plans/2026-06-22-prior-year-ingest-phase0.md`,
    `docs/PATH-B-VALIDATION.md`.
 
+5. **Phase 1 foundations + Phase 2 opening (July 2026)** — per
+   `docs/FULL-RETURN-PLAN.md`: shared cited constants module
+   (`engine/constants_2025.py`, all-status brackets verified against
+   Rev. Proc. 2024-40 — fixing a wrong MFJ top-bracket base tax), pytest
+   suite (130+ tests) with CI, and the **Schedule E Part I validation gate:
+   PROCEED** (`docs/SCHEDULE-E-PART1-VALIDATION.md`). The validation fixed
+   two real calculator bugs: MACRS partial final-year depreciation
+   (now full printed Pub 946 tables in `engine/macrs_tables.py`) and a
+   Form 8582 allowance-base netting error.
+
 ## ⚠️ Known Limitation: K-1s Are NOT Supported
 
 The system does **not** handle Schedule K-1s (Forms 1065, 1120-S, or 1041) or
