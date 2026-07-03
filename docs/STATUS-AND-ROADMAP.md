@@ -52,19 +52,22 @@ subagent review.
    (now full printed Pub 946 tables in `engine/macrs_tables.py`) and a
    Form 8582 allowance-base netting error.
 
-## ⚠️ Known Limitation: K-1s Are NOT Supported
+## K-1 Support Status (Phase 2)
 
-The system does **not** handle Schedule K-1s (Forms 1065, 1120-S, or 1041) or
-**Schedule E Part II** (partnerships and S corporations). Only single-member
-LLCs taxed as disregarded entities are supported. If any LLC has multiple
-members or elects S-corp treatment, its K-1 cannot be processed by these
-skills — consult a tax professional or handle that form manually. Also out of
-scope: foreign income, Schedule F, and complex credits (CTC, education, EIC).
+K-1 computation (Forms 1065, 1120-S, 1041 → Schedule E Parts II/III) is now
+supported via `k1_passthrough_calculator.py`: the §704(d)/§1366(d) →
+§465 → §469 limitation cascade, PTP per-entity segregation, a combined
+Form 8582 with Part I rentals, and next-year carryovers in the prior-year
+schema. Curated references: `k1-guide.md`,
+`passthrough-loss-limitations.md`.
 
-*Note: as of Phase 0, the prior-year **carryover ingestion** schema is
-passthrough/K-1 aware (it can capture K-1 carryovers from prior returns), but
-current-year K-1 **computation** remains unsupported — that is a separate
-planned follow-on design (see Next Steps).*
+**Remaining K-1 limitations** (disclosed in the calculator's notes): basis
+and at-risk capacity must be supplied (Form 7203 / basis worksheets — the
+tool BLOCKS loss entities rather than guessing); suspended-loss allocation
+is pro-rata rather than the form's per-activity worksheets; §461(l) excess
+business loss is flagged, not computed; Form 8995-A territory (above the
+QBI threshold) goes to the accountant. Still out of scope: foreign income
+(Schedule K-3), Schedule F, and complex credits (CTC, education, EIC).
 
 ## Next Steps
 

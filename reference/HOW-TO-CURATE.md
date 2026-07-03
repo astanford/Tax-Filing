@@ -125,3 +125,5 @@ If a rule cannot be cited to a specific source: **do not include it**. Instead, 
 | `passive-activity-losses.md` | Form 8582 Instructions (2025), Pub 527 (2025) | $25K allowance, MAGI phase-out, 7-day/30-day exceptions |
 | `schedule-1a-deductions.md` | Form 1040 Instructions pp. 101-115, OBBBA | New OBBBA deductions (tips, overtime, car loan, senior) |
 | `1040-line-by-line.md` | Form 1040 Instructions pp. 23-65 | Form 1040 line-by-line with cross-references |
+| `k1-guide.md` | 2025 K-1 instructions + forms (1065/1120-S/1041, committed in reference/Raw/), Schedule E Instructions | K-1 box-by-box for all three forms; Schedule E Parts II/III mechanics; PTPs; Form 7203 |
+| `passthrough-loss-limitations.md` | Partner's/Shareholder's K-1 Instructions (2025), Pub 925, Form 6198/8582 Instructions | Basis → at-risk → passive → §461(l) ordering; QNR; material participation; PTP regime; SE/QBI interaction |

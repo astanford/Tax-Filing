@@ -37,6 +37,8 @@ Use this table to determine which curated reference files to read for each form,
 | Schedule C (Business Income) | `schedule-c-guide.md` | 1099-K, 1099-NEC |
 | Schedule D / Form 8949 (Capital Gains) | `investment-income.md` | 1099-B, 1099-DIV |
 | Schedule E (Rental Real Estate) | `schedule-e-guide.md`, `rental-depreciation.md`, `passive-activity-losses.md` | 1099-MISC, Rental, 1098 |
+| Schedule E Part II/III (K-1 Passthroughs) | `k1-guide.md`, `passthrough-loss-limitations.md`, `passive-activity-losses.md` | K-1 |
+| Schedule K-1 (1065 / 1120-S / 1041) | `k1-guide.md`, `passthrough-loss-limitations.md` | K-1 |
 | Form 4562 (Depreciation) | `rental-depreciation.md` | Rental |
 | Form 8582 (Passive Activity Losses) | `passive-activity-losses.md` | Rental |
 | Schedule 1 (Additional Income/Adjustments) | `1040-line-by-line.md`, `schedule-c-guide.md`, `schedule-e-guide.md`, `student-loan-interest.md` | 1099-K, 1099-MISC, 1098-E |
@@ -212,6 +214,28 @@ When the user asks about Schedule E, rental properties, or their rental LLCs, us
 - No SE tax on Schedule E rentals *(Source: schedule-e-guide.md)*
 - GA: flows through federal AGI to Form 500 Line 8 — no separate GA rental schedule *(Source: georgia-500-guide.md, Line 8)*
 
+## Schedule E Part II / K-1 Passthrough Workflow
+
+When the user has K-1s (Forms 1065, 1120-S, or 1041), use this workflow:
+
+### Step 1 — Inventory K-1s and Carryovers
+- Check CSV for `K-1 (...)` documents; check `analysis/prior-year-carryovers-*.json` `passthrough[]` for per-entity basis (§704(d)/§1366(d)), at-risk (§465), suspended passive, and PTP carryforwards
+- For each entity confirm: entity type (P/S/trust), PTP status (box D on the 1065 K-1), material participation, and — for box 2 rental RE — active participation *(Source: k1-guide.md)*
+
+### Step 2 — Gather Basis and At-Risk Capacity
+- Loss entities REQUIRE `basis_available` and `at_risk_available` (Form 7203 for S corps; partner basis worksheet for partnerships). Without them the calculator BLOCKS the entity rather than guessing *(Source: passthrough-loss-limitations.md, Hurdle 1 — Basis Limitation)*
+- S-corp losses/distributions → Form 7203 attaches; amounts not at risk → Form 6198 attaches *(Source: passthrough-loss-limitations.md)*
+
+### Step 3 — Run the Cascade
+- Run `k1_passthrough_calculator.py` with all entities AND the Part I rental buckets (from `schedule_e_calculator.py` output `form_8582.buckets`) so rentals and passthroughs share ONE combined Form 8582
+- The script applies basis → at-risk → passive in order, segregates PTPs (never on Form 8582), and emits Part II lines 28–32, Part III lines 33–37, and next-year carryovers in the prior-year schema's keys
+
+### Step 4 — Downstream Flags
+- Box 14A SE earnings → Schedule SE *(Source: k1-guide.md, Box 14)*
+- Box 20Z / 17V QBI → Form 8995; only ALLOWED amounts count when losses are limited *(Source: passthrough-loss-limitations.md, QBI Interaction)*
+- Portfolio boxes (interest/dividends/capital gains) flow to Schedule B/D, not Schedule E *(Source: k1-guide.md)*
+- §461(l) excess business loss is flagged, not computed — engine/accountant
+
 ## "Does This Apply to Me?" Workflow
 
 When the user asks whether a provision, credit, or deduction applies:
@@ -278,6 +302,7 @@ Scripts accept a single CLI argument (JSON string) and print a JSON object to st
 | `standard_vs_itemized.py` | Compare standard deduction vs. itemized, accounting for SALT cap and phase-out |
 | `schedule_c_calculator.py` | Compute Schedule C lines: COGS, expenses, net profit/loss, SE tax flag, QBI |
 | `schedule_e_calculator.py` | Compute Schedule E per-property lines, depreciation, passive-loss limits ($25K allowance), GA bonus addback |
+| `k1_passthrough_calculator.py` | K-1 loss-limitation cascade (basis → at-risk → passive), PTP segregation, Schedule E Part II/III lines, combined Form 8582 with Part I rentals |
 | `salt_cap_calculator.py` | Compute effective SALT cap with MAGI phase-out |
 
 ## Related Skills
