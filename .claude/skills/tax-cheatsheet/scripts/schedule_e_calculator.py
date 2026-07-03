@@ -377,6 +377,17 @@ def schedule_e(data):
             "allowed_loss_total": str(cents(allowed_loss_total)),
             "suspended_loss_carryforward": str(cents(suspended)),
             "form_8582_needed": form_8582_needed,
+            # Raw buckets so k1_passthrough_calculator.py can rebuild a
+            # COMBINED Form 8582 (rental + passthrough rows interact on the
+            # same form). When K-1s are present, pass these to that script
+            # via "part1_buckets" and use ITS combined 8582 instead.
+            "buckets": {
+                "rental_activity_income": str(cents(rental_income)),
+                "rental_activity_losses": str(cents(rental_losses)),
+                "nonrental_passive_income": str(cents(nonrental_passive_income)),
+                "nonrental_passive_losses": str(cents(nonrental_passive_losses)),
+                "prior_suspended": str(cents(prior_suspended)),
+            },
         },
         "line_26_total_rental_income_or_loss": str(cents(schedule_e_net)),
         "flows_to": "Schedule 1, Line 5 -> Form 1040 Line 8; included in federal AGI -> GA Form 500 Line 8",
