@@ -126,7 +126,16 @@ and `citation` (which curated ref). Computation order:
 1. Income schedules: B, C (existing calc), D/8949 + QDCG worksheet (new),
    E Parts I + II (Phase 2 output), Schedule 1.
 2. Adjustments and SE: Schedule SE (new — currently only inside what_if),
-   IRA/HSA/student-loan (curated refs exist).
+   IRA/HSA/student-loan (curated refs exist), and **self-employed retirement
+   (SEP / solo 401(k), Schedule 1 Line 16) — new**: no curated reference or
+   calculator exists today, and the existing "max 401k" planning scenarios
+   model W-2 wage deferrals this filer doesn't have. Needs a curated ref for
+   the SEP/solo-401(k) contribution limits and the earned-income computation.
+   Vehicle expense: engine computes **miles × the curated standard mileage
+   rate** ($0.70/mile 2025, already curated in `2025-tax-numbers.md`) for
+   Schedule C Line 9 and Schedule E Line 6 — today the calculators only
+   accept a pre-computed dollar amount — including the Form 4562 Part V
+   trigger for rental auto expense.
 3. Deduction: Schedule A vs standard (existing calc), SALT (existing calc).
 4. QBI: Form 8995 with the taxable-income threshold test; **above the 8995
    threshold, emit BLOCKED → accountant** rather than attempt 8995-A.
@@ -156,7 +165,9 @@ fixture return end-to-end.*
   firewall pattern as the prior-year validator), reruns the engine, repeats
   until no missing inputs remain.
 - Also absorbs the existing per-property Schedule E checklist
-  (`docs/SCHEDULE-E-PLAN.md` §5) as structured questions.
+  (`docs/SCHEDULE-E-PLAN.md` §5) as structured questions, plus mileage-log
+  intake (business/rental miles for the standard-mileage computation) and
+  retirement-contribution questions (traditional IRA, SEP/solo-401(k)).
 
 *Gate: a fabricated scenario with deliberately missing data converges to a
 complete manifest purely through the interview loop.*
