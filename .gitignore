@@ -23,6 +23,12 @@ reference/Raw/*
 !reference/Raw/i1120ssk.pdf
 !reference/Raw/f1041sk1.pdf
 !reference/Raw/i1041sk1.pdf
+!reference/Raw/i1040sd.pdf
+!reference/Raw/f1040sd.pdf
+!reference/Raw/f8949.pdf
+!reference/Raw/i2210.pdf
+# i1040gi.pdf (4.3MB), p505/p925/p946/p527/i8582 stay local-only — cited
+# with page numbers; re-download via reference/HOW-TO-CURATE.md URLs
 
 # Python
 __pycache__/
