@@ -1,0 +1,1 @@
+pypdf==6.14.2  # form filling (Phase 5); quarantined — core skills stay stdlib-only

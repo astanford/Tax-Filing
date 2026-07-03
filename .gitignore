@@ -8,6 +8,9 @@ my tax files/
 # Generated analysis (contains personal financial data)
 analysis/
 
+# Filled forms and accountant package (personal financial data)
+output/
+
 # Raw reference PDFs (large, freely available from IRS.gov)
 reference/Raw/*
 # Exception: official sources cited by reference/curated/ files
@@ -35,3 +38,6 @@ Desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# Local virtualenv for engine form-fill deps (engine/requirements.txt)
+.venv/
