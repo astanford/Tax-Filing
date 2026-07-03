@@ -160,13 +160,13 @@ read-back diff is empty; package reviewed by owner.*
   hand-entered values.
 - Curate the estimated-tax safe-harbor reference; add the 2210 check.
 
-### Phase 6 — K-1 / Schedule E Part II (conditional)
+### Phase 6 — K-1 / Schedule E Part II (required)
 
 The already-designed follow-on (see `docs/superpowers/specs/`): validate the
 existing Schedule E Part I work, then add Part II with the §704(d) → §465 →
 §469 ordering, consuming the passthrough-aware carryover schema from Phase 0.
-**Only needed if the 2025 documents actually include K-1s** — an open
-question below. The in-flight `ingest/` Phase 1 (Hermes automation) proceeds
+**Required for finalization: the owner's 2025 documents include K-1s** (see
+Scope Decisions). The in-flight `ingest/` Phase 1 (Hermes automation) proceeds
 independently and feeds Phases 2–3 with prior-year data.
 
 ## Tooling: Plugins, MCPs, Skills
@@ -201,16 +201,20 @@ independently and feeds Phases 2–3 with prior-year data.
 (Phase 4). Existing four skills keep their roles; `/tax-cheatsheet` becomes
 optional explanation rather than the primary filing path.
 
-## Open Questions (answers change scope, not direction)
+## Scope Decisions (answered by owner, 2026-07-03)
 
-1. **Filing status for 2025?** Determines which bracket/status paths get
-   first-class regression tests (engine will support all four regardless).
-2. **Do the 2025 documents include K-1s or brokerage 1099-Bs?** K-1s → Phase 6
-   is required before "finalized"; 1099-B → Schedule D/8949 in Phase 2 is
-   load-bearing (it's included regardless, since it's cheap to keep).
-3. **Identity overlay:** keep Rule 5 as-is (accountant adds SSN/signature), or
-   add a local-only, never-committed overlay step? Default: keep as-is.
-4. **E-filing is out of scope** (the accountant reviews and files) — confirm.
+1. **Filing status 2025: married filing jointly.** MFJ paths get first-class
+   regression tests; the engine still ships all four statuses via the shared
+   constants module.
+2. **2025 documents include both brokerage 1099-Bs and K-1s.** Therefore
+   Schedule D / Form 8949 / QDCG worksheet in Phase 2 is load-bearing, and
+   **Phase 6 (K-1 / Schedule E Part II) is required — not conditional —
+   before the 2025 return can be finalized.** Until Phase 6 lands, the engine
+   BLOCKs K-1 items to the accountant flags list.
+3. **Identity fields stay blank** (Rule 5 unchanged); the accountant adds
+   SSN/bank/signature at filing. No local overlay.
+4. **E-filing is out of scope**; the accountant reviews and files. The
+   deliverable is the review package.
 
 ## Verification
 
