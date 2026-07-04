@@ -127,3 +127,5 @@ If a rule cannot be cited to a specific source: **do not include it**. Instead, 
 | `1040-line-by-line.md` | Form 1040 Instructions pp. 23-65 | Form 1040 line-by-line with cross-references |
 | `k1-guide.md` | 2025 K-1 instructions + forms (1065/1120-S/1041, committed in reference/Raw/), Schedule E Instructions | K-1 box-by-box for all three forms; Schedule E Parts II/III mechanics; PTPs; Form 7203 |
 | `passthrough-loss-limitations.md` | Partner's/Shareholder's K-1 Instructions (2025), Pub 925, Form 6198/8582 Instructions | Basis → at-risk → passive → §461(l) ordering; QNR; material participation; PTP regime; SE/QBI interaction |
+| `schedule-d-8949-guide.md` | Schedule D Instructions (2025), Schedule D + Form 8949 forms (2025), Form 1040 Instructions p. 38 | 8949 boxes A–F and 1a/8a skip rule; Schedule D line map and 17–22 branch; loss carryover worksheet; QDCG Tax Worksheet line-by-line |
+| `estimated-tax-safe-harbor.md` | Form 2210 Instructions (2025), Form 1040 Instructions p. 65, Pub 505 (2026), IT-511 (2025) | 90%/100%/110% safe harbors, $1,000 de minimis, 2025 due dates, Schedule AI, GA 500 UET |

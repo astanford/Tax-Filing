@@ -18,7 +18,13 @@ Every conversation starts here:
 3. If it does NOT exist:
    - Tell the user: "No extracted tax data found. Run `/tax-prep` first to extract your document values, then fill your forms with `/tax-cheatsheet`, and come back here for the final audit."
    - Stop — do not proceed without the CSV
-4. Collect the user's completed form values. Accept them in any of these ways:
+4. Collect the completed form values — **three-way when the engine ran**:
+   - **Preferred (engine path):** if `analysis/return-manifest.json` exists
+     (from `/tax-interview` + `/tax-return`), use its Form 1040 / GA 500
+     lines as the expected values, and ALSO read back the filled PDFs in
+     `output/` (`.venv/bin/python engine/fill_return.py` reports a
+     read-back diff; a nonempty diff is an automatic STOP). The audit then
+     checks source CSV ↔ manifest ↔ filled PDFs.
    - The user provides values directly — for example:
      ```
      1040 Line 1 wages: $85,000
@@ -32,6 +38,9 @@ Every conversation starts here:
      ```
    - The user references completed form files
    - The user reads values from their filled forms
+   Also verify the estimated-tax safe harbor: the manifest's Form 2210
+   `underpayment_exposure` line (or run the engine) — flag exposure in the
+   report *(Source: estimated-tax-safe-harbor.md)*.
 5. Ask for **filing status** if not already known (MFJ, Single, MFS, HoH)
 6. Ask which **forms they have completed** (list of form names, e.g., "1040, Schedule A, Schedule D, GA 500")
 7. Build the `federal_values` and `state_values` dicts from the user's input (see Input Schema Reference below)

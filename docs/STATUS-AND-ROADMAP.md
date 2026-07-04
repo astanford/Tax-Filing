@@ -52,6 +52,27 @@ subagent review.
    (now full printed Pub 946 tables in `engine/macrs_tables.py`) and a
    Form 8582 allowance-base netting error.
 
+6. **Phases 3–6: return engine, interview, form output, audit upgrade
+   (July 2026)** — per `docs/FULL-RETURN-PLAN.md`:
+   - **Engine (`engine/return_engine.py`)**: full federal + GA computation
+     into a cited *return manifest* — Schedule B, Schedule D/8949 with the
+     QDCG worksheet (new curated `schedule-d-8949-guide.md`), Schedule SE,
+     Forms 8959/8960/8995, 1040 assembly, GA 500, and the estimated-tax
+     safe harbor (new curated `estimated-tax-safe-harbor.md` — closes the
+     old "verify on IRS.gov" gap). Compute-with-citation-or-BLOCK design:
+     8995-A, AMT (screened), Schedule D Tax Worksheet cases, and penalty
+     amounts route to the accountant.
+   - **`/tax-interview`**: builds `analysis/return-inputs.json` from the CSV
+     + carryovers (`engine/inputs_from_csv.py`), loops on the engine's
+     missing-inputs until the return converges.
+   - **`/tax-return`**: fills official PDFs via pypdf (quarantined in
+     `.venv`, `engine/requirements.txt`) using visually-verified field maps
+     (`engine/field_maps/`, f1040 done; `engine/dump_fields.py` sentinel
+     method for the rest), read-back diff, Rule 5 hard guard, and
+     `engine/accountant_package.py` (memo + blocked items + citations).
+   - **`/tax-audit`**: three-way check (CSV ↔ manifest ↔ filled PDFs) +
+     safe-harbor exposure flag.
+
 ## K-1 Support Status (Phase 2)
 
 K-1 computation (Forms 1065, 1120-S, 1041 → Schedule E Parts II/III) is now

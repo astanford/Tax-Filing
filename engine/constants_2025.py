@@ -170,6 +170,31 @@ SCHEDULE_B_THRESHOLD = Decimal("1500")
 STANDARD_MILEAGE_RATE = Decimal("0.70")   # business, per mile [IRS Notice 2025-02]
 QBI_THRESHOLD_MFJ = Decimal("394600")     # [IRC §199A]
 
+# Form 8995 eligibility: 2025 taxable income before QBI must not exceed
+# these; above them Form 8995-A applies (engine BLOCKs to accountant).
+# (Source: k1-guide.md, Box 20 code Z; self-employment-qbi.md)
+QBI_THRESHOLD = {
+    "MFJ": Decimal("394600"),
+    "Single": Decimal("197300"),
+    "HoH": Decimal("197300"),
+    "MFS": Decimal("197300"),
+}
+
+
+# ---------------------------------------------------------------------------
+# Net Investment Income Tax — Form 8960
+# (Source: niit-form-8960.md; statutory §1411 thresholds, not inflation
+# indexed)
+# ---------------------------------------------------------------------------
+
+NIIT_RATE = Decimal("0.038")
+NIIT_THRESHOLD = {
+    "MFJ": Decimal("250000"),
+    "Single": Decimal("200000"),
+    "HoH": Decimal("200000"),
+    "MFS": Decimal("125000"),
+}
+
 
 # ---------------------------------------------------------------------------
 # Georgia — Form 500 (Source: georgia-500-guide.md; 2025-tax-numbers.md,

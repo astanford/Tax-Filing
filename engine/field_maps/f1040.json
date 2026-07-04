@@ -1,0 +1,31 @@
+{
+  "_comment": "Form 1040 (2025) AcroForm map. Curated by sentinel-fill + render + visual read-off, 2026-07-03 (see /tax-return skill for the method). SSN, routing/account (f2_32/f2_33 area), PIN, and signature fields are DELIBERATELY absent (Rule 5). Money fields use whole dollars.",
+  "source_pdf": "reference/Raw/f1040.pdf",
+  "fields": [
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_47[0]", "label": "1a wages from W-2 box 1", "manifest_form": "Form 1040", "manifest_line": "line_1_wages"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_57[0]", "label": "1z total wages", "manifest_form": "Form 1040", "manifest_line": "line_1_wages"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_59[0]", "label": "2b taxable interest", "manifest_form": "Form 1040", "manifest_line": "line_2b_interest"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_60[0]", "label": "3a qualified dividends", "manifest_form": "Form 1040", "manifest_line": "line_3a_qualified_dividends"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_61[0]", "label": "3b ordinary dividends", "manifest_form": "Form 1040", "manifest_line": "line_3b_dividends"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_70[0]", "label": "7a capital gain or loss", "manifest_form": "Form 1040", "manifest_line": "line_7_capital_gain"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_72[0]", "label": "8 additional income Schedule 1 line 10", "manifest_form": "Form 1040", "manifest_line": "line_8_schedule_1_income"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_73[0]", "label": "9 total income", "manifest_form": "Form 1040", "manifest_line": "line_9_total_income"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_74[0]", "label": "10 adjustments Schedule 1 line 25", "manifest_form": "Form 1040", "manifest_line": "line_10_adjustments"},
+    {"pdf_field": "topmostSubform[0].Page1[0].f1_75[0]", "label": "11a adjusted gross income", "manifest_form": "Form 1040", "manifest_line": "line_11_agi"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_01[0]", "label": "11b AGI (page 2)", "manifest_form": "Form 1040", "manifest_line": "line_11_agi"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_02[0]", "label": "12e standard or itemized deduction", "manifest_form": "Form 1040", "manifest_line": "line_12_deduction"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_03[0]", "label": "13a QBI deduction Form 8995", "manifest_form": "Form 1040", "manifest_line": "line_13_qbi_deduction"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_05[0]", "label": "14 add 12e+13a+13b", "manifest_form": "Form 1040", "manifest_line": "line_14_deductions_total"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_06[0]", "label": "15 taxable income", "manifest_form": "Form 1040", "manifest_line": "line_15_taxable_income"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_08[0]", "label": "16 tax", "manifest_form": "Form 1040", "manifest_line": "line_16_tax"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_10[0]", "label": "18 add lines 16 and 17", "manifest_form": "Form 1040", "manifest_line": "line_18_tax_plus_sch2_line3"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_14[0]", "label": "22 subtract line 21 from 18", "manifest_form": "Form 1040", "manifest_line": "line_22_tax_after_credits"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_15[0]", "label": "23 other taxes Schedule 2 line 21", "manifest_form": "Form 1040", "manifest_line": "line_23_other_taxes"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_16[0]", "label": "24 total tax", "manifest_form": "Form 1040", "manifest_line": "line_24_total_tax"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_20[0]", "label": "25d total withholding", "manifest_form": "Form 1040", "manifest_line": "line_25_withholding"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_21[0]", "label": "26 estimated tax payments", "manifest_form": "Form 1040", "manifest_line": "line_26_estimated_payments"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_29[0]", "label": "33 total payments", "manifest_form": "Form 1040", "manifest_line": "line_33_total_payments"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_30[0]", "label": "34 overpayment", "manifest_form": "Form 1040", "manifest_line": "line_34_overpayment"},
+    {"pdf_field": "topmostSubform[0].Page2[0].f2_35[0]", "label": "37 amount you owe", "manifest_form": "Form 1040", "manifest_line": "line_37_balance_due"}
+  ]
+}
