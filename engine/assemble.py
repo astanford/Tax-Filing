@@ -161,10 +161,11 @@ def amt_screen(m, taxable_income, salt_deducted, ded_type, federal_tax, filing_s
 
 
 def payments_and_safe_harbor(m, total_tax, withholding, estimated_payments,
-                             prior_year_tax, prior_year_agi, filing_status):
+                             prior_year_tax, prior_year_agi, filing_status,
+                             refundable_credits=ZERO):
     """Payments roll-up + Form 2210 safe-harbor test.
     (Source: estimated-tax-safe-harbor.md)"""
-    total_payments = withholding + estimated_payments
+    total_payments = withholding + estimated_payments + refundable_credits
     balance = cents(total_tax - total_payments)
     m.put("Form 1040", "line_25_withholding", withholding,
           "sum of withholding across documents (25d; a W-2/1099/other split "
@@ -172,8 +173,12 @@ def payments_and_safe_harbor(m, total_tax, withholding, estimated_payments,
     m.put("Form 1040", "line_26_estimated_payments", estimated_payments,
           "1040-ES payments + prior-year overpayment applied",
           "1040-line-by-line.md")
+    if refundable_credits > ZERO:
+        m.put("Form 1040", "line_31_schedule_3_line_13", refundable_credits,
+              "net premium tax credit (Schedule 3 line 9 -> line 13 total)",
+              "aca-premium-tax-credit.md")
     m.put("Form 1040", "line_33_total_payments", total_payments,
-          "line 25d + line 26 (no refundable credits modeled)",
+          "line 25d + line 26 + line 31 refundable credits",
           "1040-line-by-line.md")
     m.put("Form 1040", "line_37_balance_due" if balance > ZERO else "line_34_overpayment",
           abs(balance), "total tax - total payments", "1040-line-by-line.md")

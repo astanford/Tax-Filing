@@ -48,6 +48,12 @@ flagged accountant note.
     true): confirm the refund amount to include *(Source: 1040-line-by-line.md)*.
   - **Capital-loss carryover split** (short vs long) from the prior Schedule D
     if `capital_loss_carryforward_combined` is nonzero.
+  - **Marketplace health insurance (Form 1095-A)**: if present, populate the
+    `aca` inputs section — household size, 1095-A line 33 columns A/B/C
+    (or confirm monthly rows are needed if coverage/premiums changed
+    mid-year), tax-exempt interest and nontaxable Social Security for the
+    MAGI add-backs. Filing with APTC and no Form 8962 delays processing
+    *(Source: aca-premium-tax-credit.md)*.
 - Record each answer into `analysis/return-inputs.json` (Edit tool). NO
   arithmetic in prose — any derived number goes through a script.
 

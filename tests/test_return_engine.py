@@ -215,3 +215,27 @@ def test_form_8995_loss_carries_forward():
 
 def test_unknown_filing_status_is_error():
     assert "error" in compute_return({"filing_status": "QSS"})
+
+
+# --- Tax Table (printed-cell verification, i1040gi 2025 Tax Table) ----------
+
+def test_tax_table_printed_cells():
+    from decimal import Decimal as D
+    from engine.constants_2025 import FEDERAL_BRACKETS
+    from engine.tax_math import tax_from_table_or_schedule as t
+    # 3,000-3,050 row: 303 for every status
+    for s in ("Single", "MFJ", "MFS", "HoH"):
+        assert t(D("3010"), FEDERAL_BRACKETS[s]) == D("303")
+    # 95,000-95,050 row
+    assert t(D("95020"), FEDERAL_BRACKETS["Single"]) == D("15820")
+    assert t(D("95020"), FEDERAL_BRACKETS["MFJ"]) == D("10926")
+    assert t(D("95020"), FEDERAL_BRACKETS["HoH"]) == D("14081")
+    # 99,950-100,000 MFJ: midpoint crosses the 22% boundary
+    assert t(D("99975"), FEDERAL_BRACKETS["MFJ"]) == D("11823")
+    # $25-wide row below 3,000: 2,000-2,025 -> 201
+    assert t(D("2001"), FEDERAL_BRACKETS["MFJ"]) == D("201")
+    # 50-75 -> 6; under $5 -> 0
+    assert t(D("60"), FEDERAL_BRACKETS["Single"]) == D("6")
+    assert t(D("4"), FEDERAL_BRACKETS["Single"]) == D("0")
+    # At exactly 100,000 the Tax Computation Worksheet (formula) applies
+    assert t(D("100000"), FEDERAL_BRACKETS["MFJ"]) == D("11828.00")
