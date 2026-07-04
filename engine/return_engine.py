@@ -28,6 +28,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from engine.aca import form_8962
 from engine.assemble import (
     amt_screen,
     federal_deduction,
@@ -169,17 +170,31 @@ def compute_return(inputs):
     m.put("Schedule 2", "line_21_other_taxes", sched_2_total,
           "SE tax + Additional Medicare + NIIT", "additional-medicare-tax.md; niit-form-8960.md")
 
-    # Form flow: 18 = 16 + Sch2 line 3 (none modeled); credits (19-21) out
-    # of scope; 22 = 18 - 21; 23 = Sch2 line 21; 24 = 22 + 23.
-    m.put("Form 1040", "line_18_tax_plus_sch2_line3", federal_tax,
-          "line 16 (no AMT/premium-credit repayment modeled — AMT screened separately)",
-          "1040-line-by-line.md")
-    m.put("Form 1040", "line_22_tax_after_credits", federal_tax,
+    # --- ACA Premium Tax Credit reconciliation (Form 8962) ---
+    tax_exempt_interest = d(income.get("tax_exempt_interest"))
+    net_ptc, aptc_repayment = form_8962(
+        m, inputs.get("aca"), agi, tax_exempt_interest, filing_status)
+    if aptc_repayment > ZERO:
+        m.put("Schedule 2", "line_1a_excess_aptc_repayment", aptc_repayment,
+              "Form 8962 line 29", "aca-premium-tax-credit.md")
+    if net_ptc > ZERO:
+        m.put("Schedule 3", "line_9_net_premium_tax_credit", net_ptc,
+              "Form 8962 line 26", "aca-premium-tax-credit.md")
+
+    # Form flow: 17 = Schedule 2 line 3 (excess APTC repayment); 18 = 16+17;
+    # credits (19-21) out of scope; 22 = 18 - 21; 23 = Sch2 line 21;
+    # 24 = 22 + 23.
+    m.put("Form 1040", "line_17_schedule_2_line_3", aptc_repayment,
+          "Schedule 2 Part I (excess APTC repayment; AMT screened separately)",
+          "aca-premium-tax-credit.md; 1040-line-by-line.md")
+    m.put("Form 1040", "line_18_tax_plus_sch2_line3", federal_tax + aptc_repayment,
+          "line 16 + line 17", "1040-line-by-line.md")
+    m.put("Form 1040", "line_22_tax_after_credits", federal_tax + aptc_repayment,
           "line 18 (CTC/education/other credits out of scope — see roadmap)",
           "1040-line-by-line.md")
     m.put("Form 1040", "line_23_other_taxes", sched_2_total,
           "Schedule 2 line 21", "1040-line-by-line.md")
-    total_tax = cents(federal_tax + sched_2_total)
+    total_tax = cents(federal_tax + aptc_repayment + sched_2_total)
     m.put("Form 1040", "line_24_total_tax", total_tax,
           "line 22 + line 23", "1040-line-by-line.md")
 
@@ -187,7 +202,7 @@ def compute_return(inputs):
     amt_screen(m, taxable_income, salt_after_cap, ded_type, federal_tax,
                filing_status)
 
-    # --- Payments + safe harbor ---
+    # --- Payments + safe harbor (net PTC is a refundable credit on line 31) ---
     balance = payments_and_safe_harbor(
         m, total_tax,
         d(payments.get("federal_withholding")),
@@ -195,6 +210,7 @@ def compute_return(inputs):
         payments.get("prior_year_total_tax"),
         payments.get("prior_year_agi"),
         filing_status,
+        refundable_credits=net_ptc,
     )
 
     # --- Georgia ---

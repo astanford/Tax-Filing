@@ -75,6 +75,23 @@ Same as Single through the 32% bracket; the 35% bracket ends at $375,800
 [Rev. Proc. 2024-40 §2.01 Tables 1–4 (`reference/Raw/rp-24-40.pdf`); Form
 1040 Instructions (2025), Page 6; Bipartisan Policy Center, Table 3]
 
+## Tax Table Mechanics (taxable income under $100,000)
+
+Form 1040 line 16 tax MUST come from the printed Tax Table when taxable
+income is under $100,000, and from the Tax Computation Worksheet (the exact
+rate schedule) at $100,000 or more. The Tax Table's construction: rows are
+$50 wide from $3,000 to $100,000 ($25 wide from $25 to $3,000; $0–5 → $0,
+$5–15 and $15–25 → $10/$20 midpoints), and each cell equals the rate
+schedule applied to the **row midpoint**, rounded to the nearest dollar.
+Verified against printed cells: 3,000–3,050 → $303 (all statuses);
+95,000–95,050 → $15,820 / $10,926 / $15,820 / $14,081 (S/MFJ/MFS/HoH);
+99,950–100,000 MFJ → $11,823 (midpoint 99,975 crosses into the 22%
+bracket).
+
+[Form 1040 Instructions (2025), 2025 Tax Table, pp. 68–80; Tax Computation
+Worksheet p. 81 — local copy reference/Raw/i1040gi.pdf (not committed;
+see HOW-TO-CURATE download table)]
+
 ## Qualified Dividends and Capital Gain (QDCG) Tax Rates — All Statuses
 
 Taxable income up to the 0%-max is taxed at 0%; up to the 15%-max at 15%;

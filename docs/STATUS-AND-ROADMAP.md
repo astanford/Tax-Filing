@@ -73,6 +73,16 @@ subagent review.
    - **`/tax-audit`**: three-way check (CSV ↔ manifest ↔ filled PDFs) +
      safe-harbor exposure flag.
 
+7. **ACA Premium Tax Credit + exact Tax Table (July 2026)** — new curated
+   `aca-premium-tax-credit.md` (2025 keeps the ARPA/IRA enhanced structure;
+   FPL, applicable-figure bands, repayment caps all extracted and verified)
+   and `engine/aca.py` (Form 8962 annual method: net PTC → Schedule 3
+   line 9; excess APTC → Schedule 2 line 1a with Table 5 caps; BLOCKs for
+   MFS/shared-policy/year-of-marriage/below-100%-FPL/monthly-method/SE
+   circularity). The engine also now uses the exact **IRS Tax Table**
+   (midpoint rule, verified against printed cells) under $100K instead of
+   the bracket formula — load-bearing for a ~$36K filer.
+
 ## K-1 Support Status (Phase 2)
 
 K-1 computation (Forms 1065, 1120-S, 1041 → Schedule E Parts II/III) is now

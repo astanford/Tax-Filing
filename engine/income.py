@@ -16,7 +16,7 @@ from engine.constants_2025 import (
     QDCG_THRESHOLDS,
     SCHEDULE_B_THRESHOLD,
 )
-from engine.tax_math import ZERO, apply_brackets, cents, d
+from engine.tax_math import ZERO, cents, d, tax_from_table_or_schedule
 
 
 def schedule_b(m, income):
@@ -184,9 +184,10 @@ def qdcg_worksheet(m, taxable_income, qualified_dividends, sched_d_line_15,
     line_19 = line_10 + line_17
     line_20 = line_11 - line_19            # taxed at 20%
     line_21 = cents(line_20 * Decimal("0.20"))
-    line_22 = apply_brackets(line_6, brackets)   # ordinary tax on line 6
+    # Lines 22/24: Tax Table under $100K, Tax Computation Worksheet above
+    line_22 = tax_from_table_or_schedule(line_6, brackets)
     line_23 = line_18 + line_21 + line_22
-    line_24 = apply_brackets(line_1, brackets)   # ordinary tax on all of it
+    line_24 = tax_from_table_or_schedule(line_1, brackets)
     tax = min(line_23, line_24)
 
     m.put("QDCG Worksheet", "preferential_income", line_5,
@@ -201,11 +202,4 @@ def qdcg_worksheet(m, taxable_income, qualified_dividends, sched_d_line_15,
     m.put("QDCG Worksheet", "tax", tax,
           "smaller of worksheet tax or all-ordinary tax",
           "schedule-d-8949-guide.md, QDCG Tax Worksheet")
-    if line_1 < Decimal("100000"):
-        m.note("Taxable income under $100,000: the IRS Tax Table (which "
-               "rounds within $50 brackets) governs the ordinary-tax steps; "
-               "the engine uses the exact bracket formula, which can differ "
-               "by a few dollars. The accountant's software applies the "
-               "table. (Source: schedule-d-8949-guide.md, QDCG Tax Worksheet, "
-               "lines 22/24)")
     return tax
