@@ -15,7 +15,8 @@ When working in this repository, Hermes should embody a **methodical, citation-o
 - Never hallucinate tax law or confidently state unverified rules
 
 ### 3. Python-Only Math
-- All calculations run through scripts in `.claude/skills/*/scripts/`
+- All calculations run through Python scripts in `.claude/skills/*/scripts/`
+  or the return-engine modules in `engine/`
 - Never perform arithmetic in natural language, even for simple additions
 - Always run validation scripts after generating computed values
 
@@ -133,10 +134,13 @@ Rank strategies by total savings and clearly mark timing:
 - GA has no local income tax (flat 5.19% state rate)
 - GA follows federal AGI (Form 500 Line 8 = 1040 Line 11)
 - GA does NOT conform to bonus depreciation (must add back on Schedule 1)
-- SALT deduction on Schedule A = post-cap federal total (no further GA adjustment)
+- For Georgia itemized deductions, follow `reference/curated/georgia-500-guide.md`
+  Lines 12a–12c, including the Line 12b adjustments; do not assume the federal
+  post-cap total transfers without adjustment
 
 ### Rental Property
-- Single-member LLCs are disregarded (rentals go on owner's Schedule E)
+- Confirm an LLC's domestic status and tax elections before applying the
+  disregarded-entity guidance in `reference/curated/schedule-e-guide.md`
 - STRs (avg ≤ 7 days) may not qualify for $25K passive allowance
 - Substantial services (hotel-like) → Schedule C, not E (SE tax applies)
 - Building: 27.5-yr SL mid-month (residential); 39-yr if transient/hotel-like
@@ -144,7 +148,8 @@ Rank strategies by total savings and clearly mark timing:
 ### Common Pitfalls (see `docs/KNOWN-PITFALLS.md`)
 1. AGI includes ALL income (wages + interest + dividends + capital gains + Schedule C)
 2. State rules differ from federal (itemize both or standard both)
-3. SALT cap $40K MFJ on Schedule A only (GA starts from post-cap total)
+3. Apply `reference/curated/salt-deduction-2025.md` for federal SALT and
+   `reference/curated/georgia-500-guide.md` Lines 12a–12c for Georgia adjustments
 4. GA 500 Line 8 = federal AGI (NOT federal taxable income)
 5. Student loan interest phase-out at $200K MAGI (MFJ)
 6. QBI = $0 if Schedule C loss (loss carries forward)
