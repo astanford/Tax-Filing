@@ -36,6 +36,7 @@ reference/Raw/*
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
 
 # OS
 .DS_Store
@@ -49,3 +50,6 @@ Desktop.ini
 
 # Local virtualenv for engine form-fill deps (engine/requirements.txt)
 .venv/
+
+# AGENTS.md is not gitignored because it's the authoritative project doc
+# (unlike CLAUDE.md which is Claude-specific)

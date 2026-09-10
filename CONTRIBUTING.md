@@ -7,7 +7,7 @@ Tax Filing Skills is maintained by Daisy. Contributions are welcome — typo fix
 Please skim these first so we're speaking the same language:
 
 - [README.md](README.md) — what the skills do and how the pipeline fits together
-- [CLAUDE.md](CLAUDE.md) — the five project rules (also copied below)
+- [AGENTS.md](AGENTS.md) — the project rules
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how skills, scripts, and references interact
 - [reference/HOW-TO-CURATE.md](reference/HOW-TO-CURATE.md) — required reading for anyone touching tax rules
 - [docs/KNOWN-PITFALLS.md](docs/KNOWN-PITFALLS.md) — common filing mistakes we already account for
@@ -28,11 +28,11 @@ In rough order of "easiest to land" to "needs discussion first":
 - LLM-generated rule summaries or arithmetic without a source
 - Personal tax data, real SSNs, real account numbers, or anything that looks like it came from `my-tax-docs/`
 - Changes that modify the four core skills' behavior without an issue discussion first
-- Dependencies beyond the Python standard library — scripts are intentionally zero-dep
+- New core calculation dependencies without discussion — calculators use the standard library; pytest and the quarantined PDF environment are existing exceptions
 
 ## The Five Project Rules
 
-Copied verbatim from [CLAUDE.md](CLAUDE.md) so you see them without a second click:
+Core requirements from [AGENTS.md](AGENTS.md):
 
 1. Every tax rule must cite a file in `reference/curated/`
 2. If unverifiable: "I cannot verify this — check IRS.gov"

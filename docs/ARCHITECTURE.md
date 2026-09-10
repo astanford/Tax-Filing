@@ -14,11 +14,17 @@ graph TD
         REF["reference/curated/*.md"] --> CHEAT
         CHEAT --> SHEETS["analysis/cheatsheet-{form}.md"]
         CHEAT --> |"User fills forms"| FORMS["Completed Tax Forms"]
+        CSV --> INTERVIEW["/tax-interview: resolve inputs"]
+        INTERVIEW --> ENGINE["engine/return_engine.py"]
+        ENGINE --> MANIFEST["Cited manifest + missing/blocked items"]
+        MANIFEST --> OUTPUT["/tax-return: mapped PDFs + review package"]
     end
 
     subgraph "Phase 3: Verification"
         FORMS --> AUDIT["/tax-audit"]
         CSV --> AUDIT
+        MANIFEST --> AUDIT
+        OUTPUT --> AUDIT
         AUDIT --> VERDICT{"READY / REVIEW / STOP"}
     end
 
@@ -29,6 +35,15 @@ graph TD
 ```
 
 ## Data Flow
+
+The original cheat-sheet path below remains available. The engine path adds
+`engine/inputs_from_csv.py` → `analysis/return-inputs.json` (CSV values,
+carryovers, interview answers, calculator outputs) →
+`engine/return_engine.py` → `analysis/return-manifest.json` →
+`engine/fill_return.py` and `engine/accountant_package.py` → `output/`.
+Unmapped CSV rows, missing inputs, and blocked items require review; a
+computed manifest is not a completeness verdict. `/tax-audit` reconciles
+the CSV, manifest, and available PDFs. Only Form 1040 has a PDF map today.
 
 ```
 User provides tax documents (PDFs)
@@ -73,6 +88,8 @@ User provides tax documents (PDFs)
 | Skill | Scripts Called | Purpose |
 |-------|--------------|---------|
 | `/tax-prep` | `validate_extraction.py` | Validate CSV for anomalies |
+| `/tax-interview` | `engine/inputs_from_csv.py`, `engine/return_engine.py` | Build inputs and compute the cited manifest |
+| `/tax-return` | `engine/fill_return.py`, `engine/accountant_package.py` | Mapped PDF output and review package |
 | `/tax-prep` | `validate_prior_year.py` | Validate prior-year carryover JSON (schema + PII scan) |
 | `/tax-cheatsheet` | `form_line_lookup.py` | Query CSV by document/box |
 | `/tax-cheatsheet` | `standard_vs_itemized.py` | Deduction comparison |
