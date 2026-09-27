@@ -1,6 +1,6 @@
 # Status and Roadmap
 
-*Last updated: June 22, 2026*
+*Repository readiness reviewed: September 10, 2026. Tax-year coverage remains 2025.*
 
 ## What's Been Done
 
@@ -108,8 +108,14 @@ QBI threshold) goes to the accountant. Still out of scope: foreign income
 2. Gather per-property data — checklist in `docs/SCHEDULE-E-PLAN.md` §5
    (basis, placed-in-service dates, prior depreciation, suspended losses,
    days rented, services provided)
-3. `/tax-cheatsheet` per form → `/tax-audit` before filing → `/tax-advisor`
-   after
+3. `/tax-cheatsheet` for explanations; `/tax-interview` to resolve inputs
+   and compute → `/tax-return` for mapped PDFs and a review package →
+   `/tax-audit` before filing → `/tax-advisor` after
+
+Start with available documents; use [INTAKE.md](INTAKE.md) to track what
+remains. Intake can proceed before all documents arrive. The current PDF
+map covers Form 1040 only; it requires a local official 2025 template and
+the PDF dependencies. Calculation coverage is broader than PDF coverage.
 
 **In progress — prior-year ingestion subsystem:**
 - **Phase 1 (next): the `ingest/` subsystem** — a quarantined in-repo module
@@ -120,18 +126,17 @@ QBI threshold) goes to the accountant. Still out of scope: foreign income
 - Phase 2 (optional): multi-year analysis + intake-priming briefing.
 
 **Possible enhancements (in rough priority order):**
-- **K-1 / Schedule E Part II *computation*** — a separate planned follow-on
-  design covering the K-1 input forms (1065/1120-S/1041) and Schedule E; it
-  opens by validating the existing Schedule E Part I rental work, then adds
-  Part II (would need new curated refs and Part II line handling)
 - Full Form 8582 computation (current version is simplified) and a Form 4562
   detail calculator (current handles building SL; other assets entered as
   amounts)
 - NIIT (Form 8960) computation inside `what_if.py` (currently flag-only)
-- Curated reference for estimated-tax safe harbor rules (currently marked
-  "verify on IRS.gov")
-- CI to run the test suite (a `tests/` pytest harness now exists from Phase 0,
-  covering the prior-year validator; the calculation scripts still lack tests);
-  demo mode with fictional data
-- 2026 tax-year update (per `reference/HOW-TO-CURATE.md` — watch for the GA
-  rate stepping down toward 4.99%)
+- More mapped PDFs and end-to-end output verification with fictional data
+- 2026 tax-year update: verify references, constants, calculation logic,
+  tests, and form maps together before accepting a 2026 return
+
+## Local verification
+
+On September 10, 2026, `python3 -m pytest -q` passed all 182 tests.
+GitHub Actions runs the test suite on pull requests and pushes to `main`.
+These checks validate the implemented test cases, not a taxpayer's document
+completeness or every possible tax situation.

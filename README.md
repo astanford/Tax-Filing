@@ -1,12 +1,6 @@
 # Tax Filing Skills for Claude Code
 
-> I used Claude Code to build a complete tax-filing copilot — 4 custom skills,
-> 8 Python scripts, 13 curated IRS reference files — and filed my real federal
-> and state return with it.
->
-> This is "vibe coding" applied to something that actually matters.
-
-> **📋 Fork status:** See [docs/STATUS-AND-ROADMAP.md](docs/STATUS-AND-ROADMAP.md) for what's been done (Georgia conversion, Schedule E rentals, prior-year ingestion), what's next, and known limitations — **notably, K-1s / Schedule E Part II are not supported**.
+> **Fork status:** This fork includes six tax skills, a federal + Georgia return engine, rental and K-1 calculators, and automated tests. See [docs/STATUS-AND-ROADMAP.md](docs/STATUS-AND-ROADMAP.md) for coverage and limitations, and [docs/INTAKE.md](docs/INTAKE.md) to start gathering documents.
 
 ---
 
@@ -16,7 +10,7 @@ A set of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills th
 
 Built for **tax year 2025**, covering U.S. federal (Form 1040) and Georgia state (Form 500). (Forked from the original Maryland version — the architecture is designed so you can adapt it for any state.)
 
-> **Scope:** Federal (Form 1040) + Georgia (Form 500). Optimized for filers with W-2 wages, investment income, small self-employment (Schedule C), **rental real estate (Schedule E — including single-member LLCs and short/mid/long-term rentals, with depreciation and passive-loss limits)**, mortgage interest, and student loans. Does not currently cover partnerships/S-corps with K-1s (Schedule E Part II), foreign income, farm income (Schedule F), or complex credits (Child Tax Credit, Education Credits, EIC) — but the architecture is designed to be extended. See [Customizing for Your State](#customizing-for-your-state) and [reference/HOW-TO-CURATE.md](reference/HOW-TO-CURATE.md) for how to add coverage.
+> **Scope:** Tax year 2025, federal (Form 1040) + Georgia (Form 500): wages, investment income, Schedule C, rental calculations, K-1 calculations, and limited ACA Premium Tax Credit computation. K-1 loss calculations require basis and at-risk records. Foreign income, Schedule F, and complex credits such as CTC, education credits, and EIC remain outside supported computation. PDF filling currently has a map only for Form 1040; other computed forms are represented in the manifest and review package. This repository does not electronically file returns.
 
 **This is not a tax preparation app.** It's a workflow — a set of skills that make Claude Code behave like a methodical, citation-obsessed tax assistant that never does mental math.
 
@@ -29,11 +23,14 @@ graph LR
     C --> D["/tax-advisor<br/>Next-year planning"]
 
     A -->|CSV| B
+    A --> I["/tax-interview<br/>Resolve inputs and compute"]
+    I --> R["/tax-return<br/>PDF and review package"]
+    R --> C
     B -->|Form values| C
     C -->|Baseline| D
 ```
 
-Each skill reads from and writes to a shared CSV file (`analysis/tax-doc-summary.csv`) — the single source of truth for your entire return.
+Document extraction writes `analysis/tax-doc-summary.csv`. Downstream skills read it; the interview also records answers and calculator outputs in `analysis/return-inputs.json`, and the engine produces a cited return manifest.
 
 ## Why I Built This
 
@@ -81,12 +78,26 @@ Output forms always leave SSN, bank routing, account numbers, and signature fiel
 
 1. Clone this repo
 2. Open the project in Claude Code
-3. Create a `my-tax-docs/` folder and add your tax documents
+3. Create a `my-tax-docs/` folder and add the tax documents you already have; you can add more later. See the [intake checklist](docs/INTAKE.md).
    - Optional: put prior-year returns (2023/2024) in `my-tax-docs/prior-years/` — `/tax-prep` extracts carryovers (suspended passive losses, depreciation schedules, QBI/capital-loss carryforwards) into a PII-scanned JSON; a local LLM agent can do the extraction instead via the handoff template. See [docs/PRIOR-YEAR-DATA.md](docs/PRIOR-YEAR-DATA.md)
 4. Type `/tax-prep` to extract your document values
 5. Use `/tax-cheatsheet` to get line-by-line guidance — use the cheat sheet as a reference while you fill forms in your tax software or on paper
-6. Run `/tax-audit` before submitting to catch errors
-7. After filing, use `/tax-advisor` to plan for next year
+6. For engine computation, use `/tax-interview` to resolve missing inputs, then `/tax-return` for supported PDF output and a review package
+7. Run `/tax-audit` before submitting to check source values, computations, and available filled PDFs; resolve missing documents and blocked items first
+8. After filing, use `/tax-advisor` to plan for next year
+
+The skills live in `.claude/skills/`. In Codex, ask the agent to read and follow the relevant local skill file if slash commands are not registered. On systems without a `python` alias, use `python3` for the documented commands.
+
+### Local verification
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt -r engine/requirements.txt
+.venv/bin/python -m pytest -q
+git diff --check
+```
+
+The core calculations use the standard library; pytest is for tests and pypdf is for PDF output. See [docs/INTAKE.md](docs/INTAKE.md) for the separate PDF-template prerequisite.
 
 ### Customizing for Your State
 
@@ -104,6 +115,8 @@ This fork is set up for Georgia (Form 500); the original was built for Maryland 
 |-------|-------------|-----------------|
 | **`/tax-prep`** | Reads every tax document, extracts box/line values into a structured CSV. Validates for anomalies. | "extract my tax docs", "let's start my taxes", "I have my tax docs ready" |
 | **`/tax-cheatsheet`** | Generates line-by-line cheat sheets for any form. Explains what each line means, where the value comes from, which rules apply. | "help me fill out Form 1040", "cheat sheet for Schedule C", "what goes on line 12a" |
+| **`/tax-interview`** | Builds engine inputs from the CSV and carryovers, asks about gaps, and computes a cited manifest. | "what do you still need from me", "compute my return" |
+| **`/tax-return`** | Fills mapped PDFs with read-back verification and produces a review package. | "generate my return", "accountant package" |
 | **`/tax-audit`** | Comprehensive pre-filing cross-check. Verifies math, withholding, cross-form consistency, document completeness. Issues a verdict: READY / REVIEW / STOP. | "audit my return", "am I ready to file", "final check" |
 | **`/tax-advisor`** | Models what-if scenarios for next year. Quantifies dollar impact of 401(k), HSA, charitable giving, and more on federal + state taxes. | "how to reduce my taxes", "what if I maxed my 401k", "tax planning" |
 
@@ -138,7 +151,7 @@ Skills and scripts use rules with citations
 
 Each curated file covers one topic (e.g., SALT deduction, mortgage interest, Schedule C). Every rule includes a citation to the source IRS publication, form instruction, or IRC section.
 
-**To update for a new tax year:** Update the 13 curated files with new thresholds. The skills and scripts stay the same. See [HOW-TO-CURATE.md](reference/HOW-TO-CURATE.md) for the format.
+**To update for a new tax year:** Review curated references, engine constants and tax tables, calculator logic, tests, and PDF templates/maps together. Changing a year label or reference file alone does not update the calculations. See [HOW-TO-CURATE.md](reference/HOW-TO-CURATE.md) for the curation format.
 
 ### Curated Reference Files
 
@@ -168,7 +181,7 @@ This repository contains the **workflow and logic** — the reusable part. All p
 **Not included:**
 - `my-tax-docs/` — Your scanned/PDF tax documents (W-2s, 1099s, etc.)
 - `analysis/` — Extracted CSV and generated cheat sheets with real values
-- `reference/Raw/` — Source IRS/state PDFs (~40MB, freely available from IRS.gov)
+- Most `reference/Raw/` PDFs — selected official sources are tracked; other templates and publications must be obtained locally
 - Situation-specific notes that were in reference files (replaced with placeholder sections)
 
 **The `.gitignore` protects** against accidentally committing personal documents or generated analysis files.
@@ -188,9 +201,9 @@ See the [examples/](examples/) directory for sample outputs using fictional data
 ## Future Ideas
 
 - **Multi-state support** — Abstract state-specific logic into a `states/` module pattern
-- **Unit tests** — Run each script with sample data to verify outputs
+- **Broader coverage** — Extend calculation and form-map verification for currently unsupported cases
 - **Demo mode** — Run the full pipeline end-to-end with fictional data
-- **GitHub Actions CI** — Verify scripts stay functional on every push
+- **Additional PDF maps** — Expand output beyond the existing Form 1040 map
 
 ## Contributing
 
