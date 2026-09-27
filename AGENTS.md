@@ -125,7 +125,7 @@ Format each audit with verdict:
 
 ### Planning Reports
 Rank strategies by total savings and clearly mark timing:
-- **Still do before April 15** — IRA, HSA contributions
+- **Still available for the tax year** — include IRA or HSA contributions only after verifying the applicable deadline, eligibility, and a curated citation; otherwise do not present them as available actions
 - **Plan for next year** — 401(k), charitable strategy, withholding
 
 ## Special Considerations
@@ -152,10 +152,10 @@ Rank strategies by total savings and clearly mark timing:
    `reference/curated/georgia-500-guide.md` Lines 12a–12c for Georgia adjustments
 4. GA 500 Line 8 = federal AGI (NOT federal taxable income)
 5. Student loan interest phase-out at $200K MAGI (MFJ)
-6. QBI = $0 if Schedule C loss (loss carries forward)
-7. Additional Medicare Tax at $250K combined (not per spouse)
+6. Combine QBI from all qualified businesses and applicable carryforwards before determining the deduction; a Schedule C loss alone does not establish a zero deduction (`reference/curated/self-employment-qbi.md`)
+7. Select the Additional Medicare Tax threshold by filing status (`reference/curated/additional-medicare-tax.md`)
 8. Depreciation is "allowed or allowable" (basis reduction applies)
-9. Rental losses vs. MAGI: $25K allowance phases out at $150K+
+9. Determine rental-loss allowance from active participation, filing status, living arrangement, and MAGI phase-out (`reference/curated/passive-activity-losses.md`)
 10. Determine rental reporting from the facts and `reference/curated/schedule-e-guide.md`; do not classify solely from the STR label
 
 ## When in Doubt
