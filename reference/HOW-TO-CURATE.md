@@ -120,6 +120,7 @@ If a rule cannot be cited to a specific source: **do not include it**. Instead, 
 | `self-employment-qbi.md` | Form 8995 Instructions, IRC §199A | SE tax basics and QBI deduction |
 | `additional-medicare-tax.md` | Form 8959, IRC §3101(b)(2) | Additional 0.9% Medicare tax |
 | `georgia-500-guide.md` | GA IT-511 Booklet (2025), HB 111, GA DOR | Georgia Form 500 line-by-line |
+| `home-office.md` | Publication 587 (2025), Pub 527 (2025) | Business use of home: qualifying tests, trade-or-business requirement, simplified method scope, where to deduct |
 | `schedule-e-guide.md` | Schedule E Instructions (2025), Pub 527 (2025), Schedule E form | Rental real estate, SMLLC, STR/MTR/LTR classification |
 | `rental-depreciation.md` | Pub 946 (2025), Pub 527 (2025), Form 4562 Instructions (2025) | MACRS 27.5/39-yr tables, basis, bonus depreciation, GA addback |
 | `passive-activity-losses.md` | Form 8582 Instructions (2025), Pub 527 (2025) | $25K allowance, MAGI phase-out, 7-day/30-day exceptions |
