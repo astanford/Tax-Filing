@@ -96,7 +96,7 @@ User provides tax documents (PDFs)
 | `/tax-cheatsheet` | `schedule_c_calculator.py` | Schedule C computation |
 | `/tax-cheatsheet` | `schedule_e_calculator.py` | Schedule E rentals: depreciation, passive-loss limits |
 | `/tax-cheatsheet` | `salt_cap_calculator.py` | SALT cap with phase-out |
-| `/tax-audit` | `cross_check.py` | 10 cross-checks |
+| `/tax-audit` | `cross_check.py` | 10 core cross-checks + 4 optional (Schedule E, K-1, payments, rents); $100 tolerance |
 | `/tax-audit` | `completeness_check.py` | Document coverage |
 | `/tax-advisor` | `what_if.py` | 11 tax-saving scenarios |
 
