@@ -3,7 +3,7 @@ completeness_check.py — Document coverage, required forms detection,
 and orphaned document identification.
 
 Usage:
-    python completeness_check.py '{"csv_path": "analysis/tax-doc-summary.csv", "forms_filed": ["1040", "Schedule A", "Schedule B", "Schedule D", "GA 500"], "filing_status": "MFJ"}'
+    python completeness_check.py '{"csv_path": "analysis/tax-doc-summary.csv", "forms_filed": ["1040", "Schedule A", "Schedule B", "Schedule D", "GA 500"], "filing_status": "MFJ", "ga_resident": true, "qbi_claimed": false}'
 
 Reads the extracted tax document CSV and checks:
 1. Every document is mapped to at least one filed form
@@ -17,6 +17,7 @@ reference/curated/additional-medicare-tax.md.
 import csv
 import json
 import os
+import re
 import sys
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -78,20 +79,31 @@ DOC_TO_FORMS = {
     "1099-NEC": ["Schedule C"],
     "1099-R": ["1040"],
     "1099-G": ["Schedule 1", "1040"],
-    "1099-SA": ["1040"],
+    "1099-SA": ["Form 8889"],        # HSA distributions (Source: retirement-hsa-limits.md)
     "1099-MISC": ["Schedule E"],
     "1095-C": [],
+    "5498-SA": [],                   # HSA contribution/FMV statement: informational
     "W-2G": ["1040", "Schedule 1"],
     # Rental property records (property manager statements, expense logs)
     # use document labels like "Rental (123 Main St)" — see tax-prep SKILL.md
     "RENTAL": ["Schedule E"],
+    # Partnership K-1: rental/ordinary income reported on Schedule E Part II
+    # (Source: k1-guide.md, Part III box-by-box)
+    "K-1": ["Schedule E"],
 }
+
+# Working records the workflow creates that feed calculations but are not IRS
+# forms: they are recognized (not orphaned) and map to no form by themselves.
+SUPPORTING_PREFIXES = (
+    "IRS ACCOUNT TRANSCRIPT", "STRIPE", "MILEAGE LOG", "HOME OFFICE",
+    "CAPITAL ADDITIONS", "PROPERTY TAX BILLS", "REAL ESTATE PROFESSIONAL",
+)
 
 # Known document type prefixes for detection
 DOC_TYPE_ORDER = [
     "1099-INT", "1099-DIV", "1099-NEC", "1099-SA", "1099-B", "1099-K",
     "1099-MISC", "1099-R", "1099-G", "1098-E", "1098-T", "1098", "1095-C",
-    "W-2G", "W-2", "RENTAL",
+    "5498-SA", "K-1", "W-2G", "W-2", "RENTAL",
 ]
 
 
@@ -121,6 +133,26 @@ def detect_doc_type(doc_name):
     return None
 
 
+def is_supporting(doc_name):
+    """True for workflow working records (transcript, Stripe report, mileage...)."""
+    return doc_name.upper().startswith(SUPPORTING_PREFIXES)
+
+
+def is_rental_label(doc_name):
+    """A document label that marks business/rental property (an LLC or 'Rental')."""
+    upper = doc_name.upper()
+    return "LLC" in upper or "RENTAL" in upper
+
+
+def expected_forms_for(doc, doc_type):
+    """Forms a document feeds. A 1098 for an LLC/rental property is rental
+    mortgage interest (Schedule E line 12), not a Schedule A itemized item.
+    (Source: schedule-e-guide.md, line 12)"""
+    if doc_type == "1098" and is_rental_label(doc):
+        return ["Schedule E"]
+    return DOC_TO_FORMS.get(doc_type, [])
+
+
 def normalize_form(form_name):
     """Normalize form name for comparison (case-insensitive, strip whitespace)."""
     return form_name.strip().lower()
@@ -146,6 +178,15 @@ def check_document_coverage(rows, forms_filed):
 
     coverage = []
     for doc, doc_type in documents.items():
+        if doc_type is None and is_supporting(doc):
+            coverage.append({
+                "document": doc,
+                "type": "supporting",
+                "status": "supporting",
+                "maps_to": ["Supporting record"],
+                "detail": "Working record used in calculations; not an IRS form"
+            })
+            continue
         if doc_type is None:
             coverage.append({
                 "document": doc,
@@ -156,7 +197,7 @@ def check_document_coverage(rows, forms_filed):
             })
             continue
 
-        expected_forms = DOC_TO_FORMS.get(doc_type, [])
+        expected_forms = expected_forms_for(doc, doc_type)
         if not expected_forms:
             # Document type recognized but has no form mapping (e.g., 1095-C)
             coverage.append({
@@ -170,6 +211,18 @@ def check_document_coverage(rows, forms_filed):
 
         # Check if at least one expected form is filed
         filed_matches = [f for f in expected_forms if form_filed(forms_filed, f)]
+        if not filed_matches and doc_type == "1098" and expected_forms == ["Schedule A"]:
+            # A personal mortgage statement feeds Schedule A only when
+            # itemizing; with the standard deduction it legitimately feeds no
+            # filed form. (Schedule A stays "recommended" in check B.)
+            coverage.append({
+                "document": doc,
+                "type": doc_type,
+                "status": "optional",
+                "maps_to": ["Schedule A (only if itemizing)"],
+                "detail": "Feeds Schedule A only if itemizing; Schedule A is not filed"
+            })
+            continue
         if filed_matches:
             coverage.append({
                 "document": doc,
@@ -194,8 +247,12 @@ def check_document_coverage(rows, forms_filed):
 # Check B: Required forms
 # ---------------------------------------------------------------------------
 
-def check_required_forms(rows, forms_filed, filing_status):
-    """Determine which forms/schedules are required based on CSV content."""
+def check_required_forms(rows, forms_filed, filing_status, options=None):
+    """Determine which forms/schedules are required based on CSV content.
+
+    options: {"ga_resident": bool, "qbi_claimed": bool}
+    """
+    options = options or {}
     required = []
 
     # --- 1040 is always required ---
@@ -252,12 +309,15 @@ def check_required_forms(rows, forms_filed, filing_status):
     # (Source: schedule-e-guide.md)
     has_1099misc = any("1099-MISC" in row.get("document", "").upper() for row in rows)
     has_rental = any(row.get("document", "").upper().startswith("RENTAL") for row in rows)
-    if has_1099misc or has_rental:
+    has_k1 = any(detect_doc_type(row.get("document", "")) == "K-1" for row in rows)
+    if has_1099misc or has_rental or has_k1:
         sources = []
         if has_1099misc:
             sources.append("1099-MISC")
         if has_rental:
             sources.append("rental property records")
+        if has_k1:
+            sources.append("Schedule K-1 (Part II)")
         required.append({
             "form": "Schedule E",
             "status": "required",
@@ -270,10 +330,15 @@ def check_required_forms(rows, forms_filed, filing_status):
             "reason": "Rental activity present — required if there is a rental loss or prior suspended passive losses (see passive-activity-losses.md for the exception conditions)",
             "filed": form_filed(forms_filed, "Form 8582")
         })
+        auto_or_additions = any(
+            row.get("document", "").upper().startswith(("CAPITAL ADDITIONS", "MILEAGE LOG"))
+            for row in rows)
         required.append({
             "form": "Form 4562",
-            "status": "recommended",
-            "reason": "Required if property/assets were placed in service this year or bonus depreciation is claimed (see rental-depreciation.md)",
+            "status": "required" if auto_or_additions else "recommended",
+            "reason": ("Assets placed in service this year or vehicle (Part V) expenses claimed — Form 4562 required "
+                       "(see rental-depreciation.md; schedule-e-guide.md, line 6)" if auto_or_additions else
+                       "Required if property/assets were placed in service this year or bonus depreciation is claimed (see rental-depreciation.md)"),
             "filed": form_filed(forms_filed, "Form 4562")
         })
 
@@ -301,7 +366,7 @@ def check_required_forms(rows, forms_filed, filing_status):
 
     # --- Schedule 1: if Schedule C is present, or 1098-E, or 1099-G ---
     has_sched_c = has_1099k or has_1099nec
-    has_sched_e = has_1099misc or has_rental
+    has_sched_e = has_1099misc or has_rental or has_k1
     has_1098e = any("1098-E" in row.get("document", "").upper() for row in rows)
     has_1099g = any("1099-G" in row.get("document", "").upper() for row in rows)
     if has_sched_c or has_sched_e or has_1098e or has_1099g:
@@ -346,11 +411,14 @@ def check_required_forms(rows, forms_filed, filing_status):
 
     # --- Form 8995 (QBI): recommended if Schedule C present ---
     # (Source: self-employment-qbi.md, QBI Deduction)
-    if has_sched_c:
+    if has_sched_c or has_sched_e:
+        qbi_claimed = bool(options.get("qbi_claimed"))
         required.append({
             "form": "Form 8995",
-            "status": "recommended",
-            "reason": "Schedule C business income — file Form 8995 for QBI deduction (or to establish loss carryforward)",
+            "status": "required" if qbi_claimed else "recommended",
+            "reason": ("QBI deduction claimed (business, rental or K-1 income) — Form 8995 required"
+                       if qbi_claimed else
+                       "Business, rental or K-1 income — file Form 8995 for the QBI deduction (or to establish a loss carryforward)"),
             "filed": form_filed(forms_filed, "Form 8995")
         })
 
@@ -367,11 +435,24 @@ def check_required_forms(rows, forms_filed, filing_status):
         if "W-2" in doc and box in ("Box 16", "Box 17"):
             has_ga = True
 
+    # Georgia also applies with no W-2: an explicit ga_resident flag, or a
+    # rental/K-1 document labeled with a Georgia location (", GA" / " GA ").
+    # (Source: georgia-500-guide.md; federal AGI flows to Form 500 line 8)
+    ga_reason = "W-2 contains Georgia state wage/withholding data"
+    if not has_ga and options.get("ga_resident"):
+        has_ga, ga_reason = True, "Taxpayer is a Georgia resident (ga_resident)"
+    if not has_ga:
+        for row in rows:
+            doc = row.get("document", "")
+            if (doc.upper().startswith("RENTAL") or detect_doc_type(doc) == "K-1") \
+                    and re.search(r"\bGA\b", doc):
+                has_ga, ga_reason = True, "Georgia rental/partnership property appears in the documents"
+                break
     if has_ga:
         required.append({
             "form": "GA 500",
             "status": "required",
-            "reason": "W-2 contains Georgia state wage/withholding data",
+            "reason": ga_reason,
             "filed": form_filed(forms_filed, "GA 500")
         })
 
@@ -380,6 +461,7 @@ def check_required_forms(rows, forms_filed, filing_status):
         "1098" in row.get("document", "").upper()
         and "1098-E" not in row.get("document", "").upper()
         and "1098-T" not in row.get("document", "").upper()
+        and not is_rental_label(row.get("document", ""))
         for row in rows
     )
     if has_1098:
@@ -421,13 +503,15 @@ def completeness_check(data):
 
     # Run checks
     coverage = check_document_coverage(rows, forms_filed)
-    required = check_required_forms(rows, forms_filed, filing_status)
+    options = {"ga_resident": bool(data.get("ga_resident")), "qbi_claimed": bool(data.get("qbi_claimed"))}
+    required = check_required_forms(rows, forms_filed, filing_status, options)
     orphaned = find_orphaned(coverage)
 
     # Compute summary
     total_docs = len(coverage)
     mapped = sum(1 for c in coverage if c["status"] == "mapped")
     unmapped = sum(1 for c in coverage if c["status"] == "unmapped")
+    supporting = sum(1 for c in coverage if c["status"] == "supporting")
     orphaned_count = len(orphaned)
 
     forms_required = sum(1 for r in required if r["status"] == "required")
@@ -451,6 +535,7 @@ def completeness_check(data):
             "total_documents": total_docs,
             "mapped": mapped,
             "unmapped": unmapped,
+            "supporting": supporting,
             "orphaned": orphaned_count,
             "forms_required": forms_required,
             "forms_required_filed": forms_required_filed,

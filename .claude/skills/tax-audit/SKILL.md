@@ -57,11 +57,20 @@ Every conversation starts here:
 | 6 | Withholding Match | Federal withholding on 1040 = sum of W-2 Box 2 | `cross_check.py` | `1040-line-by-line.md` |
 | 7 | Withholding Match | State withholding on GA 500 Line 24 = sum of W-2 Box 17 | `cross_check.py` | `georgia-500-guide.md` |
 | 8 | Cross-Return Consistency | Federal AGI matches GA 500 Line 8 | `cross_check.py` | `georgia-500-guide.md` |
-| 8a | Cross-Form Consistency | Schedule E Line 26 matches Schedule 1 Line 5 (when rentals present) | `cross_check.py` | `schedule-e-guide.md` |
+| 8a | Cross-Form Consistency | Schedule E Line 41 (Parts I-IV; Line 26 + Part II line 32 + Part III line 37) matches Schedule 1 Line 5 | `cross_check.py` | `schedule-e-guide.md` |
+| 8b | Cross-Form Consistency | Schedule E Part II net = K-1 boxes 1+2+3 less declared unreimbursed partnership expenses (`schedule_e_part2_upe`); Line 23a rents = rental documents' Line 3; Line 26 estimated payments = IRS transcript code 670 | `cross_check.py` | `k1-guide.md`, `schedule-e-guide.md` |
 | 9 | Document Completeness | Every CSV document reflected in filed forms | `completeness_check.py` | All |
 | 10 | Missing Forms | Required schedules filed based on income types | `completeness_check.py` | `investment-income.md`, `schedule-c-guide.md`, `additional-medicare-tax.md` |
 | 11 | Common Mistakes | 14 known pitfalls verified | Manual review | `docs/KNOWN-PITFALLS.md` |
 | 12 | Estimated Payments | Entered amounts match actual payments | Manual review | `1040-line-by-line.md` |
+
+## Notes on the scripts (updated 2026-09-30)
+
+- **Tolerance is $100** (user-directed; `TOLERANCE` in `cross_check.py`). It catches missing or mistyped entries, not small errors.
+- Statuses: `pass`, `fail`, `warning`, plus `skipped` (a needed input was not provided) and `not_applicable` (nothing to verify, for example no W-2 and $0 entered). Neither `skipped` nor `not_applicable` counts as a pass.
+- The tax check uses the IRS Tax Table under $100,000 and is two-sided: a tax below the expected amount fails unless qualified dividends or capital gain are entered (`line_3a_qualified_dividends`, `line_7_capital_gain`).
+- `cross_check.py` accepts engine output (`engine_result` or `engine_result_path`); when checking the engine against itself, treat the comparisons as consistency checks, not independent verification.
+- `completeness_check.py` inputs: `ga_resident` (Georgia return required without a W-2) and `qbi_claimed` (Form 8995 required). K-1s require Schedule E; LLC or rental 1098s map to Schedule E; workflow records (transcript, Stripe, mileage log, home office, capital additions, property tax bills, real estate professional claim) are "supporting".
 
 ## Audit Workflow
 

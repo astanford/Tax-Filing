@@ -239,3 +239,33 @@ def test_tax_table_printed_cells():
     assert t(D("4"), FEDERAL_BRACKETS["Single"]) == D("0")
     # At exactly 100,000 the Tax Computation Worksheet (formula) applies
     assert t(D("100000"), FEDERAL_BRACKETS["MFJ"]) == D("11828.00")
+
+
+# --- Form 8995: unconstrained 20% path (added after mutation check) -------------
+
+def test_form_8995_twenty_percent_when_income_limit_not_binding():
+    """QBI 50,000, taxable income before QBI 200,000: 20% * 50,000 = 10,000;
+    the income limit (20% * 200,000 = 40,000) does not bind."""
+    m = Manifest(2025, "MFJ")
+    ded, carry, _ = form_8995(m, Decimal("50000"), Decimal("0"), Decimal("0"),
+                              Decimal("200000"), Decimal("0"), "MFJ")
+    assert ded == Decimal("10000.00")
+    assert carry == Decimal("0")
+
+
+def test_form_8995_prior_loss_carryforward_reduces_qbi():
+    """50,000 of QBI less a 10,000 prior-year QBI loss carryforward = 40,000;
+    20% = 8,000."""
+    m = Manifest(2025, "MFJ")
+    ded, carry, _ = form_8995(m, Decimal("50000"), Decimal("10000"), Decimal("0"),
+                              Decimal("200000"), Decimal("0"), "MFJ")
+    assert ded == Decimal("8000.00")
+    assert carry == Decimal("0")
+
+
+def test_form_8995_reit_ptp_component_added():
+    """20% of 10,000 REIT/PTP income adds 2,000 to 10,000 from QBI."""
+    m = Manifest(2025, "MFJ")
+    ded, _, _ = form_8995(m, Decimal("50000"), Decimal("0"), Decimal("10000"),
+                          Decimal("200000"), Decimal("0"), "MFJ")
+    assert ded == Decimal("12000.00")

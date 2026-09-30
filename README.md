@@ -131,7 +131,7 @@ This fork is set up for Georgia (Form 500); the original was built for Maryland 
 | `schedule_c_calculator.py` | /tax-cheatsheet | Schedule C: COGS, expenses, net profit/loss, SE tax flag, QBI |
 | `schedule_e_calculator.py` | /tax-cheatsheet | Schedule E: per-property P&L, MACRS depreciation, passive-loss limits, GA bonus addback |
 | `salt_cap_calculator.py` | /tax-cheatsheet | SALT deduction with $40K cap and MAGI phase-out |
-| `cross_check.py` | /tax-audit | 10 cross-checks: income match, AGI math, withholding, brackets |
+| `cross_check.py` | /tax-audit | 10 core cross-checks (income match, AGI math, withholding, Tax Table) + 4 optional (Schedule E line 41, K-1 Part II, transcript payments, rents); $100 tolerance; accepts engine output |
 | `completeness_check.py` | /tax-audit | Document coverage, required forms, orphaned documents |
 | `what_if.py` | /tax-advisor | 11 tax-saving scenarios with federal + state + local impact |
 
